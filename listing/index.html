@@ -1138,17 +1138,10 @@
                   <!-- Inclusions -->
                   <li class="rlr-icon-text rlr-secondary-menu-desc__list"><i class="rlr-icon-font flaticon-check-rounded"> </i> <span class="rlr-icon-text__text">All breakfasts, 4 packed lunches, and 6 dinners </span></li>
                   <li class="rlr-icon-text rlr-secondary-menu-desc__list"><i class="rlr-icon-font flaticon-check-rounded"> </i> <span class="rlr-icon-text__text">All Fees and Taxes </span></li>
-                  <li class="rlr-icon-text rlr-secondary-menu-desc__list"><i class="rlr-icon-font flaticon-check-rounded"> </i> <span class="rlr-icon-text__text">Highly experienced Government Registered guide </span></li>
-                  <li class="rlr-icon-text rlr-secondary-menu-desc__list"><i class="rlr-icon-font flaticon-check-rounded"> </i> <span class="rlr-icon-text__text">First aid box </span></li>
-                  <li class="rlr-icon-text rlr-secondary-menu-desc__list"><i class="rlr-icon-font flaticon-check-rounded"> </i> <span class="rlr-icon-text__text">All necessary documents and paperwork (TIMS cards and permit) </span></li>
                   <li class="rlr-icon-text rlr-secondary-menu-desc__list"><i class="rlr-icon-font flaticon-check-rounded"> </i> <span class="rlr-icon-text__text">Farewell dinner </span></li>
                   <!-- Exclusion -->
-                  <li class="rlr-icon-text rlr-secondary-menu-desc__list"><i class="rlr-icon-font flaticon-cross-rounded"> </i> <span class="rlr-icon-text__text">Farewell dinner </span></li>
                   <li class="rlr-icon-text rlr-secondary-menu-desc__list"><i class="rlr-icon-font flaticon-cross-rounded"> </i> <span class="rlr-icon-text__text">Alcoholic Beverages </span></li>
                   <li class="rlr-icon-text rlr-secondary-menu-desc__list"><i class="rlr-icon-font flaticon-cross-rounded"> </i> <span class="rlr-icon-text__text">Portugal visa fee </span></li>
-                  <li class="rlr-icon-text rlr-secondary-menu-desc__list"><i class="rlr-icon-font flaticon-cross-rounded"> </i> <span class="rlr-icon-text__text">Alcoholic Beverages </span></li>
-                  <li class="rlr-icon-text rlr-secondary-menu-desc__list"><i class="rlr-icon-font flaticon-cross-rounded"> </i> <span class="rlr-icon-text__text">Personal expenses (Phone calls, bar bills, battery recharge, laundry) </span></li>
-                  <li class="rlr-icon-text rlr-secondary-menu-desc__list"><i class="rlr-icon-font flaticon-cross-rounded"> </i> <span class="rlr-icon-text__text">Tipping and donations </span></li>
                 </ul>
               </div>
             </div>
@@ -1664,38 +1657,53 @@
         </section>
         <!-- The Modal -->
         <div id="reviewModal" class="modal">
-
           <!-- Modal content -->
           <div class="modal-content">
             <div id="rlr-review-from" class="container-xxxl">
-              <section class="rlr-section rlr-section__content--md-top row justify-content-center my-5">
+              <section class="rlr-section rlr-section__content--md-top row justify-content-center my-0">
+                <div class="modal-header">
+                  <div class="rlr-section__heading py-4 px-3">
+                    <label class="rlr-form-label rlr-form-label--dark m-0" for="rlr_review_form_title"> Tulis Ulasan </label>
+                  </div>
+                </div>
                 <div class="col-xl-12">
-                  <fieldset class="rlr-product-form--show">
+                  <fieldset class="rlr-product-form--show px-3">
                     <legend class="rlr-review-form__hidden-legend">Tulis ulasan</legend>
                     <!-- Section heading -->
-                    <div class="rlr-section__heading">
-                      <h1 class="rlr-section__heading--main">Tulis ulasan</h1>
-                    </div>
                     <div class="rlr-fieldrow">
+                      <div class="rlr-fieldrow_item my-2">
+                        <div class='rating-stars text-center'>
+                          <ul id='stars'>
+                            <li class='star' title='Poor' data-value='1'>
+                              <i class='rlr-icon-font flaticon-star-1'></i>
+                            </li>
+                            <li class='star' title='Fair' data-value='2'>
+                              <i class='rlr-icon-font flaticon-star-1'></i>
+                            </li>
+                            <li class='star' title='Good' data-value='3'>
+                              <i class='rlr-icon-font flaticon-star-1'></i>
+                            </li>
+                            <li class='star' title='Excellent' data-value='4'>
+                              <i class='rlr-icon-font flaticon-star-1'></i>
+                            </li>
+                            <li class='star' title='WOW!!!' data-value='5'>
+                              <i class='rlr-icon-font flaticon-star-1'></i>
+                            </li>
+                          </ul>
+                        </div>
+                        
+                      </div>
                       <div class="rlr-fieldrow__form-element">
-                        <div class="rlr-fieldrow__item my-2">
+                        <div class="rlr-fieldrow__item mt-2 mb-4">
                           <label class="rlr-form-label rlr-form-label--dark mb-3" for="rlr_review_form_title"> Judul </label> <input type="text" autocomplete="off" maxlength="70" id="rlr_review_form_title" class="form-control" placeholder="Hotel mewah di Jimbaran">
                         </div>
-                        <div class="rlr-fieldrow__item mt-5">
+                        <div class="rlr-fieldrow__item mt-2 mb-4">
                           <label class="rlr-form-label rlr-form-label--dark mb-3" for="rlr_review_form_desc"> Ceritakan pengalaman Anda </label>
                           <textarea id="rlr_review_form_desc" class="form-control form-control--text-area" placeholder="Provide more information for travelers to find your starting point easily, for example, opposite to the xyz landmark building" rows="12"></textarea>
                         </div>
                         </div>
-                        <div class="rlr-fieldrow__item mt-3">
-                          <div class="rlr-rating-stars">
-                            <span class="rlr-rating-stars__label">Rating</span>
-                            <div class="rlr-rating-stars__iconset">
-                              <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="rlr-fieldrow__item mt-5">
-                          <label class="rlr-form-label rlr-form-label--" for="rlr_review_form_uploader"> Tambahkan foto dari pengalaman Anda. </label>
+                        <div class="rlr-fieldrow__item mt-2 mb-4">
+                          <label class="rlr-form-label rlr-form-label--dark mb-4" for="rlr_review_form_title"> Tambahkan foto dari pengalaman Anda.  </label>
                           <div class="rlr-drop-region js-rlr-drop-region">
                             <div class="rlr-drop-region__add-section">
                               <input required="" id="rlr_review_form_uploader" class="rlr-drop-region__image-input js-rlr-drop-input" type="file" accept="image/*" multiple="">
@@ -1721,16 +1729,17 @@
                           </div>
                         </div>
                       </div>
-                    </fieldset></div>
-                    <div class="rlr-review-form__buttons mt-0">
-                      <button type="button" class="btn rlr-button rlr-review-form__cancel rlr-button--small rlr-button--rounded rlr-button--white" id="closeModalBtn">Batal</button>
-                      <button type="button" class="btn rlr-button rlr-review-form__submit rlr-button--small rlr-button--rounded rlr-button--brand">Kirim</button>
+                    </fieldset>
+                  </div>
+                    <div class="modal-footer d-flex justify-content-between">
+                      <div class="rlr-review-form__buttons mt-0 py-2 px-3" style="width: 100%">
+                        <button type="button" class="btn rlr-button rlr-review-form__cancel rlr-button--small rlr-button--rounded rlr-button--white mt-0" id="closeModalBtn">Batal</button>
+                        <button type="button" class="btn rlr-button rlr-review-form__submit rlr-button--small rlr-button--rounded rlr-button--brand mt-0">Kirim</button>
+                      </div>
                     </div>
-                  
-                </section></div>
-              
+                  </section>
+                </div>
             </div>
-
         </div>
       </div>  
     </main>
@@ -1790,6 +1799,7 @@
     <!-- Scripts -->
     <script src="../vendors/navx/js/navigation.min.js" defer></script>
     <script src="../js/main.js" defer></script>
+    <script src="../js/custom.js"></script>
     <script>
       $('#reviewModalBtn').on('click', function(e) {
         e.preventDefault();
