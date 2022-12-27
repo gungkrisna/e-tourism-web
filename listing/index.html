@@ -14,7 +14,7 @@
     <!-- Main CSS -->
     <link rel="stylesheet" href="../styles/custom.css" />
     <!-- JQuery -->
-    <script src="../vendors/jquery.min.js"></script>]
+    <script src="../vendors/jquery.min.js"></script>
   </head>
 
   <body class="rlr-body">
@@ -1161,36 +1161,13 @@
                 </svg>
               </div>
               <div class="rlr-secondary-menu-desc__details">
-                <aside class="row">
-                <!-- Search header -->
-                  <div class="rlr-search-results-header rlr-search-results-header__wrapper border-0">
-                    <!-- Title -->
-                    <div class="rlr-input-group" aria-expanded="false">
-                      <input type="text" style="width: 100%;" autocomplete="off" class="form-control" placeholder="Cari ulasan">
-                    </div>
-                    <!-- Sort order -->
-                    <div class="rlr-search-results-header__sorting-wrapper">
-                      <span class="rlr-search-results-header__label">Urut berdasar:</span>
-                      <div class="dropdown rlr-dropdown rlr-js-dropdown">
-                        <button class="btn dropdown-toggle rlr-dropdown__button rlr-js-dropdown-button" type="button" id="rlr_dropdown_menu_search_results" data-bs-toggle="dropdown" aria-expanded="false" data-bs-offset="-50,35">Ulasan terbaru</button>
-                        <ul class="dropdown-menu rlr-dropdown__menu" aria-labelledby="rlr_dropdown_menu_search_results" style="">
-                        <li>
-                          <a class="dropdown-item rlr-dropdown__item rlr-js-dropdown-item active" href="#">Ulasan terbaru</a>
-                        </li>
-                        <li>
-                          <hr class="dropdown-divider rlr-dropdown__divider" />
-                        </li>
-                        <li>
-                          <a class="dropdown-item rlr-dropdown__item rlr-js-dropdown-item" href="#">Rating tertinggi</a>
-                        </li>
-                        <li>
-                          <a class="dropdown-item rlr-dropdown__item rlr-js-dropdown-item" href="#">Rating terendah</a>
-                        </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                </aside>
+              <div class="d-lg-flex justify-content-between py-4">
+                <div class="d-flex justify-content-start gap-2">
+                  <i class="rlr-icon-font flaticon-star-1 m-0" style="font-size: 1.5rem;"> </i>
+                  <h1 class="rlr-section__heading--main rlr-product-detail-header__title m-0" style="font-size: 1.5rem;">4.58 · 14 ulasan</h1>
+                </div>
+                <button type="button" class="btn btn-add-review rlr-button rlr-button--gray-00 text-black px-4 py-2" style="border: 0.1px solid lightgray; border-radius: 8px;" id="addReviewModalBtn">Tambah ulasan</button>
+              </div>
                 <!-- Review -->
                 <article class="rlr-review-card my-3" itemscope itemtype="https://schema.org/Product">
                   <div class="rlr-review-card__contact">
@@ -1283,8 +1260,7 @@
                 </article>
                 <!-- Pagination -->
                 <div class="rlr-secondary-menu-desc__footer">
-                  <span class="rlr-secondary-menu-desc__show-more">Tampilkan lebih banyak ulasan</span>
-                  <a class="rlr-secondary-menu-desc__review-link" id="reviewModalBtn">Tulis ulasan</a>
+                  <button type="button" class="btn mb-3 rlr-button rlr-button--gray-00 text-black px-4 py-2" id="showReviewModalBtn" style="border: 0.1px solid lightgray; border-radius: 8px;">Tampilkan semua ulasan</button>
                 </div>
               </div>
             </div>
@@ -1655,8 +1631,8 @@
             </div>
           </div>
         </section>
-        <!-- The Modal -->
-        <div id="reviewModal" class="modal">
+        <!-- Add Review Modal -->
+        <div id="addReviewModal" class="modal">
           <!-- Modal content -->
           <div class="modal-content">
             <div id="rlr-review-from" class="container-xxxl">
@@ -1741,6 +1717,265 @@
                 </div>
             </div>
         </div>
+
+        <!-- Review Modal -->
+        <div id="showReviewModal" class="modal">
+          <!-- Modal content -->
+          <div class="modal-content">
+            <!-- Product cards -->
+              <div class="modal-header d-flex justify-content-start px-4 py-3 gap-2">
+                <i class="rlr-icon-font flaticon-star-1 m-0" style="font-size: 1.5rem;"> </i>
+                <h1 class="rlr-section__heading--main rlr-product-detail-header__title m-0" style="font-size: 1.5rem;">4.58 · 14 ulasan</h1>
+              </div>
+              <aside class="row p-4">
+                <!-- Search header -->
+                  <div class="rlr-search-results-header rlr-search-results-header__wrapper border-0">
+                    <!-- Title -->
+                    <div class="rlr-input-group" aria-expanded="false">
+                      <input type="text" style="width: 100%;" autocomplete="off" class="form-control" placeholder="Cari ulasan">
+                    </div>
+                    <!-- Sort order -->
+                    <div class="rlr-search-results-header__sorting-wrapper">
+                      <span class="rlr-search-results-header__label">Urut berdasarkan:</span>
+                      <div class="dropdown rlr-dropdown rlr-js-dropdown">
+                        <button class="btn dropdown-toggle rlr-dropdown__button rlr-js-dropdown-button" type="button" id="rlr_dropdown_menu_search_results" data-bs-toggle="dropdown" aria-expanded="false" data-bs-offset="-50,35">Ulasan terbaru</button>
+                        <ul class="dropdown-menu rlr-dropdown__menu" aria-labelledby="rlr_dropdown_menu_search_results" style="">
+                        <li>
+                          <a class="dropdown-item rlr-dropdown__item rlr-js-dropdown-item active" href="#">Ulasan terbaru</a>
+                        </li>
+                        <li>
+                          <hr class="dropdown-divider rlr-dropdown__divider" />
+                        </li>
+                        <li>
+                          <a class="dropdown-item rlr-dropdown__item rlr-js-dropdown-item" href="#">Rating tertinggi</a>
+                        </li>
+                        <li>
+                          <a class="dropdown-item rlr-dropdown__item rlr-js-dropdown-item" href="#">Rating terendah</a>
+                        </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </aside>
+              <div class="row m-0">
+                <aside class="col-md-12 col-lg-4 p-4">
+                  <label class="rlr-form-label rlr-form-label-- rlr-product-filters__label"> Rating </label>
+                  <ul class="rlr-checkboxes">
+                    <li class="form-check form-check-block">
+                      <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox" id="rlr-filter-age-group-1" type="checkbox" checked="">
+                      <label class="rlr-form-label rlr-form-label--checkbox rlr-product-filters__checkbox-label" for="rlr-filter-age-group-1"> Semua Rating </label>
+                    </li>
+                    <li class="form-check form-check-block">
+                      <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox" id="rlr-filter-rating-1" type="checkbox">
+                      <label aria-label="rating-1" for="rlr-filter-rating-1">
+                        <span class="rlr-product-filters__hidden">rating 1</span>
+                        <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i>
+                      </label>
+                    </li>
+                    <li class="form-check form-check-block">
+                      <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox" id="rlr-filter-rating-2" type="checkbox">
+                      <label aria-label="rating-2" for="rlr-filter-rating-2">
+                        <span class="rlr-product-filters__hidden">rating 2</span>
+                        <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i>
+                      </label>
+                    </li>
+                    <li class="form-check form-check-block">
+                      <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox" id="rlr-filter-rating-3" type="checkbox">
+                      <label aria-label="rating-3" for="rlr-filter-rating-3">
+                        <span class="rlr-product-filters__hidden">rating 3</span>
+                        <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i> <i class="rlr-icon-font flaticon-star"> </i>
+                      </label>
+                    </li>
+                    <li class="form-check form-check-block">
+                      <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox" id="rlr-filter-rating-4" type="checkbox">
+                      <label aria-label="rating-4" for="rlr-filter-rating-4">
+                        <span class="rlr-product-filters__hidden">rating 4</span>
+                        <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i> <i class="rlr-icon-font flaticon-star"> </i> <i class="rlr-icon-font flaticon-star"> </i>
+                      </label>
+                    </li>
+                    <li class="form-check form-check-block">
+                      <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox" id="rlr-filter-rating-5" type="checkbox">
+                      <label aria-label="rating-5" for="rlr-filter-rating-5">
+                        <span class="rlr-product-filters__hidden">rating 5</span>
+                        <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i> <i class="rlr-icon-font flaticon-star"> </i> <i class="rlr-icon-font flaticon-star"> </i> <i class="rlr-icon-font flaticon-star"> </i>
+                      </label>
+                    </li>
+                  </ul>
+                </aside>
+                <div class="col-lg-8 modal-review-list">
+                  <article class="rlr-review-card my-3" itemscope="" itemtype="https://schema.org/Product">
+                    <div class="rlr-review-card__contact">
+                      <!--Using in Components -->
+                      <div class="rlr-avatar d-flex">
+                        <img class="rlr-avatar__media--rounded" src="../assets/images/misc/image-1_56x56.jpg" itemprop="avatar" alt="avatar icon">
+  
+                          <div class="d-flex flex-column ml-2">
+                            <span class="rlr-avatar__name" style="font-weight: 500;" itemprop="name">Patrick Bateman</span>
+                            <span class="rlr-avatar__name" style="font-weight: 300; font-size: 90%" itemprop="date">23 November 2022</span>
+                          </div>
+                      </div>
+                      <div class="rlr-review-stars" itemprop="ratingValue" itemscope="" itemtype="https://schema.org/Product">
+                        <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i>
+                      </div>
+                    </div>
+                    <div class="rlr-review-card__details">
+                      <div class="rlr-review-card__title gap-4">
+                        <h3 class="rlr-review-card__title-review">Nice place</h3>
+                        <span class="rlr-svg-icon">
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_iconCarrier"> <path d="M6 14.4623H16.1909C17.6066 14.4623 18.472 12.7739 17.7261 11.4671L17.2365 10.6092C16.7547 9.76504 16.7547 8.69728 17.2365 7.85309L17.7261 6.99524C18.472 5.68842 17.6066 4 16.1909 4L6 4L6 14.4623ZM6 14.4623L6 20" stroke="#363853" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>                      </span>
+                      </div>
+                      <div class="rlr-review-card__comments" itemprop="review description">
+                        <div class="rlr-readmore-desc">
+                          <p class="rlr-readmore-desc__content rlr-js-desc">Dolor elit voluptate cupidatat in eiusmod. Eiusmod ex eu incididunt etile pariatur dolor mollit reprehenderit magna tempor ex minim velit sunt do.</p>
+                          <span class="rlr-readmore-desc__readmore rlr-js-readmore">Show more...</span>
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                <article class="rlr-review-card my-3" itemscope="" itemtype="https://schema.org/Product">
+                    <div class="rlr-review-card__contact">
+                      <!--Using in Components -->
+                      <div class="rlr-avatar d-flex">
+                        <img class="rlr-avatar__media--rounded" src="../assets/images/misc/image-1_56x56.jpg" itemprop="avatar" alt="avatar icon">
+  
+                          <div class="d-flex flex-column ml-2">
+                            <span class="rlr-avatar__name" style="font-weight: 500;" itemprop="name">Patrick Bateman</span>
+                            <span class="rlr-avatar__name" style="font-weight: 300; font-size: 90%" itemprop="date">23 November 2022</span>
+                          </div>
+                      </div>
+                      <div class="rlr-review-stars" itemprop="ratingValue" itemscope="" itemtype="https://schema.org/Product">
+                        <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i>
+                      </div>
+                    </div>
+                    <div class="rlr-review-card__details">
+                      <div class="rlr-review-card__title gap-4">
+                        <h3 class="rlr-review-card__title-review">Nice place</h3>
+                        <span class="rlr-svg-icon">
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_iconCarrier"> <path d="M6 14.4623H16.1909C17.6066 14.4623 18.472 12.7739 17.7261 11.4671L17.2365 10.6092C16.7547 9.76504 16.7547 8.69728 17.2365 7.85309L17.7261 6.99524C18.472 5.68842 17.6066 4 16.1909 4L6 4L6 14.4623ZM6 14.4623L6 20" stroke="#363853" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>                      </span>
+                      </div>
+                      <div class="rlr-review-card__comments" itemprop="review description">
+                        <div class="rlr-readmore-desc">
+                          <p class="rlr-readmore-desc__content rlr-js-desc">Dolor elit voluptate cupidatat in eiusmod. Eiusmod ex eu incididunt etile pariatur dolor mollit reprehenderit magna tempor ex minim velit sunt do.</p>
+                          <span class="rlr-readmore-desc__readmore rlr-js-readmore">Show more...</span>
+                        </div>
+                      </div>
+                    </div>
+                  </article><article class="rlr-review-card my-3" itemscope="" itemtype="https://schema.org/Product">
+                    <div class="rlr-review-card__contact">
+                      <!--Using in Components -->
+                      <div class="rlr-avatar d-flex">
+                        <img class="rlr-avatar__media--rounded" src="../assets/images/misc/image-1_56x56.jpg" itemprop="avatar" alt="avatar icon">
+  
+                          <div class="d-flex flex-column ml-2">
+                            <span class="rlr-avatar__name" style="font-weight: 500;" itemprop="name">Patrick Bateman</span>
+                            <span class="rlr-avatar__name" style="font-weight: 300; font-size: 90%" itemprop="date">23 November 2022</span>
+                          </div>
+                      </div>
+                      <div class="rlr-review-stars" itemprop="ratingValue" itemscope="" itemtype="https://schema.org/Product">
+                        <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i>
+                      </div>
+                    </div>
+                    <div class="rlr-review-card__details">
+                      <div class="rlr-review-card__title gap-4">
+                        <h3 class="rlr-review-card__title-review">Nice place</h3>
+                        <span class="rlr-svg-icon">
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_iconCarrier"> <path d="M6 14.4623H16.1909C17.6066 14.4623 18.472 12.7739 17.7261 11.4671L17.2365 10.6092C16.7547 9.76504 16.7547 8.69728 17.2365 7.85309L17.7261 6.99524C18.472 5.68842 17.6066 4 16.1909 4L6 4L6 14.4623ZM6 14.4623L6 20" stroke="#363853" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>                      </span>
+                      </div>
+                      <div class="rlr-review-card__comments" itemprop="review description">
+                        <div class="rlr-readmore-desc">
+                          <p class="rlr-readmore-desc__content rlr-js-desc">Dolor elit voluptate cupidatat in eiusmod. Eiusmod ex eu incididunt etile pariatur dolor mollit reprehenderit magna tempor ex minim velit sunt do.</p>
+                          <span class="rlr-readmore-desc__readmore rlr-js-readmore">Show more...</span>
+                        </div>
+                      </div>
+                    </div>
+                  </article><article class="rlr-review-card my-3" itemscope="" itemtype="https://schema.org/Product">
+                    <div class="rlr-review-card__contact">
+                      <!--Using in Components -->
+                      <div class="rlr-avatar d-flex">
+                        <img class="rlr-avatar__media--rounded" src="../assets/images/misc/image-1_56x56.jpg" itemprop="avatar" alt="avatar icon">
+  
+                          <div class="d-flex flex-column ml-2">
+                            <span class="rlr-avatar__name" style="font-weight: 500;" itemprop="name">Patrick Bateman</span>
+                            <span class="rlr-avatar__name" style="font-weight: 300; font-size: 90%" itemprop="date">23 November 2022</span>
+                          </div>
+                      </div>
+                      <div class="rlr-review-stars" itemprop="ratingValue" itemscope="" itemtype="https://schema.org/Product">
+                        <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i>
+                      </div>
+                    </div>
+                    <div class="rlr-review-card__details">
+                      <div class="rlr-review-card__title gap-4">
+                        <h3 class="rlr-review-card__title-review">Nice place</h3>
+                        <span class="rlr-svg-icon">
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_iconCarrier"> <path d="M6 14.4623H16.1909C17.6066 14.4623 18.472 12.7739 17.7261 11.4671L17.2365 10.6092C16.7547 9.76504 16.7547 8.69728 17.2365 7.85309L17.7261 6.99524C18.472 5.68842 17.6066 4 16.1909 4L6 4L6 14.4623ZM6 14.4623L6 20" stroke="#363853" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>                      </span>
+                      </div>
+                      <div class="rlr-review-card__comments" itemprop="review description">
+                        <div class="rlr-readmore-desc">
+                          <p class="rlr-readmore-desc__content rlr-js-desc">Dolor elit voluptate cupidatat in eiusmod. Eiusmod ex eu incididunt etile pariatur dolor mollit reprehenderit magna tempor ex minim velit sunt do.</p>
+                          <span class="rlr-readmore-desc__readmore rlr-js-readmore">Show more...</span>
+                        </div>
+                      </div>
+                    </div>
+                  </article><article class="rlr-review-card my-3" itemscope="" itemtype="https://schema.org/Product">
+                    <div class="rlr-review-card__contact">
+                      <!--Using in Components -->
+                      <div class="rlr-avatar d-flex">
+                        <img class="rlr-avatar__media--rounded" src="../assets/images/misc/image-1_56x56.jpg" itemprop="avatar" alt="avatar icon">
+  
+                          <div class="d-flex flex-column ml-2">
+                            <span class="rlr-avatar__name" style="font-weight: 500;" itemprop="name">Patrick Bateman</span>
+                            <span class="rlr-avatar__name" style="font-weight: 300; font-size: 90%" itemprop="date">23 November 2022</span>
+                          </div>
+                      </div>
+                      <div class="rlr-review-stars" itemprop="ratingValue" itemscope="" itemtype="https://schema.org/Product">
+                        <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i>
+                      </div>
+                    </div>
+                    <div class="rlr-review-card__details">
+                      <div class="rlr-review-card__title gap-4">
+                        <h3 class="rlr-review-card__title-review">Nice place</h3>
+                        <span class="rlr-svg-icon">
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_iconCarrier"> <path d="M6 14.4623H16.1909C17.6066 14.4623 18.472 12.7739 17.7261 11.4671L17.2365 10.6092C16.7547 9.76504 16.7547 8.69728 17.2365 7.85309L17.7261 6.99524C18.472 5.68842 17.6066 4 16.1909 4L6 4L6 14.4623ZM6 14.4623L6 20" stroke="#363853" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>                      </span>
+                      </div>
+                      <div class="rlr-review-card__comments" itemprop="review description">
+                        <div class="rlr-readmore-desc">
+                          <p class="rlr-readmore-desc__content rlr-js-desc">Dolor elit voluptate cupidatat in eiusmod. Eiusmod ex eu incididunt etile pariatur dolor mollit reprehenderit magna tempor ex minim velit sunt do.</p>
+                          <span class="rlr-readmore-desc__readmore rlr-js-readmore">Show more...</span>
+                        </div>
+                      </div>
+                    </div>
+                  </article><article class="rlr-review-card my-3" itemscope="" itemtype="https://schema.org/Product">
+                    <div class="rlr-review-card__contact">
+                      <!--Using in Components -->
+                      <div class="rlr-avatar d-flex">
+                        <img class="rlr-avatar__media--rounded" src="../assets/images/misc/image-1_56x56.jpg" itemprop="avatar" alt="avatar icon">
+  
+                          <div class="d-flex flex-column ml-2">
+                            <span class="rlr-avatar__name" style="font-weight: 500;" itemprop="name">Patrick Bateman</span>
+                            <span class="rlr-avatar__name" style="font-weight: 300; font-size: 90%" itemprop="date">23 November 2022</span>
+                          </div>
+                      </div>
+                      <div class="rlr-review-stars" itemprop="ratingValue" itemscope="" itemtype="https://schema.org/Product">
+                        <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i>
+                      </div>
+                    </div>
+                    <div class="rlr-review-card__details">
+                      <div class="rlr-review-card__title gap-4">
+                        <h3 class="rlr-review-card__title-review">Nice place</h3>
+                        <span class="rlr-svg-icon">
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_iconCarrier"> <path d="M6 14.4623H16.1909C17.6066 14.4623 18.472 12.7739 17.7261 11.4671L17.2365 10.6092C16.7547 9.76504 16.7547 8.69728 17.2365 7.85309L17.7261 6.99524C18.472 5.68842 17.6066 4 16.1909 4L6 4L6 14.4623ZM6 14.4623L6 20" stroke="#363853" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>                      </span>
+                      </div>
+                      <div class="rlr-review-card__comments" itemprop="review description">
+                        <div class="rlr-readmore-desc">
+                          <p class="rlr-readmore-desc__content rlr-js-desc">Dolor elit voluptate cupidatat in eiusmod. Eiusmod ex eu incididunt etile pariatur dolor mollit reprehenderit magna tempor ex minim velit sunt do.</p>
+                          <span class="rlr-readmore-desc__readmore rlr-js-readmore">Show more...</span>
+                        </div>
+                      </div>
+                    </div>
+                  </article></div>
+              </div>
+            </div>
+        </div>
       </div>  
     </main>
     <!-- Footer -->
@@ -1801,17 +2036,32 @@
     <script src="../js/main.js" defer></script>
     <script src="../js/custom.js"></script>
     <script>
-      $('#reviewModalBtn').on('click', function(e) {
+      $('#addReviewModalBtn').on('click', function(e) {
         e.preventDefault();
-        $('#reviewModal').fadeIn(100, 'linear');
+        $('#addReviewModal').fadeIn(100, 'linear');
       });
       $('#closeModalBtn').on('click', function(e) {
         e.preventDefault();
-        $('#reviewModal').fadeOut(100, 'linear');
+        $('#addReviewModal').fadeOut(100, 'linear');
       });
       $(document).click(function (e) {
-          if ($(e.target).is('#reviewModal')) {
-              $('#reviewModal').fadeOut(100, 'linear');
+          if ($(e.target).is('#addReviewModal')) {
+              $('#addReviewModal').fadeOut(100, 'linear');
+          }
+      });
+
+
+      $('#showReviewModalBtn').on('click', function(e) {
+        e.preventDefault();
+        $('#showReviewModal').fadeIn(100, 'linear');
+      });
+      $('#closeModalBtn').on('click', function(e) {
+        e.preventDefault();
+        $('#showReviewModal').fadeOut(100, 'linear');
+      });
+      $(document).click(function (e) {
+          if ($(e.target).is('#showReviewModal')) {
+              $('#showReviewModal').fadeOut(100, 'linear');
           }
       });
     </script>

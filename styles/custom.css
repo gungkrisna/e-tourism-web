@@ -11,15 +11,16 @@
     background-color: rgb(0,0,0); /* Fallback color */
     background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
   }
-  
+
   .modal-header,
-  .modal-footer {
-    background-color: #f8f9fa;
+  .modal-footer
+   {
+    background-color: inherit;
     position: sticky;
     z-index: 100; /* to make sure the header and footer are on top of the content */
   }
   
-  .modal-header {
+  .modal-header, .review-search-panel {
     top: 0;
     /* header styles go here */
   }
@@ -37,14 +38,20 @@
     transform: translate(-50%, -50%);
     max-height: 80%;
     overflow-y: auto;
+    overflow-x: hidden; /* Add this line to hide content that overflows the modal horizontally */
     border-radius: 12px;
-    width: 90%; /* Could be more or less, depending on screen size */
+    max-width: 90%; /* Could be more or less, depending on screen size */
   }
   
-  /* Small devices (landscape phones, 576px and up) */
-@media (min-width: 576px) {
+  /* Small devices */
+  @media (min-width: 576px), (max-width: 576px) {
     .modal-content {
       width: 90%;
+    }
+    .btn-add-review {
+        margin-top: 1rem;
+        width: 100%;
+        margin-bottom: 1rem;
     }
   }
   
@@ -59,6 +66,11 @@
   @media (min-width: 992px) {
     .modal-content {
       width: 50%;
+    }
+    .btn-add-review {
+        margin-top: 0;
+        width: auto;
+        margin-bottom: 9;
     }
   }
 
