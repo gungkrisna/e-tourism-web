@@ -1,9 +1,27 @@
+.rlr-banner-splide__image-wrapper::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0));
+    border-radius: inherit;
+  }
+
 .rlr-avatar__media--rounded {
     object-fit: cover;
     height: 56px;
     width: 56px;
 }
 
+.description-url:hover {
+    cursor: pointer;
+    text-decoration: underline;
+    transition: text-decoration 0.2s ease-in-out;
+  }
+
+  
 /* The Modal (background) */
 .modal {
     display: none; /* Hidden by default */
