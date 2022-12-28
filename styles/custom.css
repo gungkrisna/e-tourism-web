@@ -67,40 +67,6 @@
     max-width: 90%; /* Could be more or less, depending on screen size */
   }
   
-  /* Small devices */
-  @media (min-width: 576px), (max-width: 576px) {
-    .modal-content {
-      width: 90%;
-    }
-    .btn-add-review {
-        margin-top: 1rem;
-        width: 100%;
-        margin-bottom: 1rem;
-    }
-    .review-list-stars {
-        display: none;
-    }
-  }
-  
-  /* Medium devices (tablets, 768px and up) */
-  @media (min-width: 768px) {
-    .modal-content {
-      width: 75%;
-    }
-  }
-  
-  /* Large devices (desktops, 992px and up) */
-  @media (min-width: 992px) {
-    .modal-content {
-      width: 50%;
-    }
-    .btn-add-review {
-        margin-top: 0;
-        width: auto;
-        margin-bottom: 9;
-    }
-  }
-
   /* Rating Star Widgets Style */
 .rating-stars ul {
     list-style-type:none;
@@ -130,4 +96,47 @@
     color:#FF912C;
   }
   
+   /* Small devices */
+   @media (min-width: 576px), (max-width: 576px) {
+    .modal-content {
+      width: 90%;
+    }
+    .btn-add-review {
+        margin-top: 1rem;
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+    .review-list-stars {
+        display: none;
+    }
+    .rlr-error {
+        background-image: none;
+    }
+  }
+  
+  /* Medium devices (tablets, 768px and up) */
+  @media (min-width: 768px) {
+    .modal-content {
+      width: 75%;
+    }
+    .rlr-error {
+        background-image: none;
+    }
+  }
+  
+  /* Large devices (desktops, 992px and up) */
+  @media (min-width: 992px) {
+    .modal-content {
+      width: 50%;
+    }
+    .btn-add-review {
+        margin-top: 0;
+        width: auto;
+        margin-bottom: 9;
+    }
+    .rlr-error {
+        background-image: url(../assets/svg/error-bg.svg);
+      }
+  }
+
   
