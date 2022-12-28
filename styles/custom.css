@@ -39,7 +39,7 @@
   .modal-header,
   .modal-footer
    {
-    background-color: inherit;
+    background-color: #fff;
     position: sticky;
     z-index: 100; /* to make sure the header and footer are on top of the content */
   }
