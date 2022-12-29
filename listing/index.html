@@ -1866,6 +1866,8 @@
   <script src="../js/main.js" defer></script>
   <script src="../js/custom.js"></script>
   <script>
+    $(window.location.hash).fadeIn(100, 'linear');
+    
     $('#addReviewModalBtn').on('click', function (e) {
       e.preventDefault();
       $('#addReviewModal').fadeIn(100, 'linear');
@@ -1894,6 +1896,10 @@
         $('#showReviewModal').fadeOut(100, 'linear');
       }
     });
+    if (location.href.indexOf('#showReviewModal') != -1) {
+      e.preventDefault();
+      $('#showReviewModal').fadeIn(100, 'linear');
+    };
 
 
     $('.button-report-review').on('click', function (e) {

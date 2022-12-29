@@ -1,0 +1,4 @@
+#blogTitle[placeholder]:empty:before, #blogSubtitle[placeholder]:empty:before {
+    content: attr(placeholder);
+    color: rgb(162, 162, 162); 
+};
