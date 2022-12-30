@@ -1,9 +1,21 @@
+<?php
+include 'src/conn.php';
+session_start();
+
+if (isset($_SESSION['user_id'])) {
+  $stmt = $conn->prepare('SELECT * FROM pengguna WHERE id_pengguna = ?');
+  $stmt->execute([$_SESSION['user_id']]);
+  $user = $stmt->fetch();
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="description" content="Your vacation, tours and travel theme needs are all met at E-Tourism." />
+  <meta name="description" content="Temukan objek wisata, akomodasi, serta makanan dan minuman terbaik di E-Tourism. Kami membantu Anda menemukan pengalaman wisata terbaik di seluruh dunia dengan menyediakan ulasan dan rekomendasi dari para traveler sejati. Jelajahi destinasi wisata populer atau cari inspirasi untuk liburan selanjutnya di E-Tourism." />
+  <meta name="keywords" content="objek wisata, akomodasi, f&b, makanan dan minuman, rekomendasi wisata, ulasan wisata, destinasi wisata.">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Discover Your Next Trip - E-Tourism</title>
   <!-- Favicon -->
@@ -42,8 +54,7 @@
               </a>
             </div>
           </div>
-          <span class="rlr-sVGIcon navigation-body-close-button"> <i
-              class="rlr-icon-font rlr-icon-font--megamenu flaticon-close"> </i> </span>
+          <span class="rlr-sVGIcon navigation-body-close-button"> <i class="rlr-icon-font rlr-icon-font--megamenu flaticon-close"> </i> </span>
         </div>
 
         <!-- Main menu -->
@@ -687,11 +698,11 @@
           </li>
           <!-- User account dropdown -->
           <li class="navigation-item">
-            <a class="navigation-link" href="#"> Saul Goodman <img
-                class="ui right spaced rlr-avatar rlr-avatar__media--rounded" style="height: 32px; width: 32px;"
-                src="https://static.wikia.nocookie.net/inconsistently-heinous/images/e/e0/Saul_2009.jpg"
-                alt="account avatar" /> </a>
+            <a class="navigation-link" href="#"> <?= isset($_SESSION['user_id']) ? $user['nama'] : 'Guest' ?> <img class="ui right spaced rlr-avatar rlr-avatar__media--rounded" style="height: 32px; width: 32px;" src="https://static.wikia.nocookie.net/inconsistently-heinous/images/e/e0/Saul_2009.jpg" alt="account avatar" /> </a>
+            
             <ul class="navigation-dropdown">
+
+              <?php if (isset($_SESSION['user_id'])) : ?>
               <li class="navigation-dropdown-item">
                 <a class="navigation-dropdown-link" href="./profile">Akun saya</a>
               </li>
@@ -704,7 +715,13 @@
               <li class="navigation-dropdown-item">
                 <a class="navigation-dropdown-link" href="./logout/">Keluar</a>
               </li>
+              <? else : ?> 
+              <li class="navigation-dropdown-item">
+                <a class="navigation-dropdown-link" href="./login/">Login</a>
+              </li>
+              <? endif; ?>
             </ul>
+
           </li>
         </ul>
       </div>
@@ -721,9 +738,7 @@
               <!-- Banner slide 1 -->
               <li class="splide__slide rlr-banner-splide__slide">
                 <div class="rlr-banner-splide__image-wrapper">
-                  <img class="rlr-banner-splide__banner-img lazyload" data-sizes="auto"
-                    data-src="./assets/images/banner/banner-1.jpeg" src="./assets/images/banner/banner-1.jpeg"
-                    alt="#" />
+                  <img class="rlr-banner-splide__banner-img lazyload" data-sizes="auto" data-src="./assets/images/banner/banner-1.jpeg" src="./assets/images/banner/banner-1.jpeg" alt="#" />
                 </div>
                 <article class="rlr-banner-splide__content-wrapper">
                   <header class="rlr-banner-splide__header">
@@ -734,31 +749,24 @@
                     <div class="rlr-banner-splide__temperature">
                       <span>10° C</span>
                       <div class="rlr-banner-splide__arrows">
-                        <button class="rlr-banner-splide__arrow rlr-banner-splide__arrow--prev rlr-banner-js-arrow-prev"
-                          aria-label="prev button">
+                        <button class="rlr-banner-splide__arrow rlr-banner-splide__arrow--prev rlr-banner-js-arrow-prev" aria-label="prev button">
                           <span> <i class="rlr-icon-font flaticon-left"> </i> </span>
                         </button>
-                        <button class="rlr-banner-splide__arrow rlr-banner-splide__arrow--next rlr-banner-js-arrow-next"
-                          aria-label="next button">
+                        <button class="rlr-banner-splide__arrow rlr-banner-splide__arrow--next rlr-banner-js-arrow-next" aria-label="next button">
                           <span> <i class="rlr-icon-font flaticon-right"> </i> </span>
                         </button>
                       </div>
                     </div>
                     <div class="rlr-banner-splide__payment-option animate__animated animate__fadeInUp">
                       <span class="rlr-svg-font">
-                        <svg height="64" width="64" fill="#000000" version="1.1" id="XMLID_65_"
-                          xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                          viewBox="-10.32 -10.32 44.64 44.64" xml:space="preserve" stroke="#000000"
-                          stroke-width="0.00024000000000000003">
+                        <svg height="64" width="64" fill="#000000" version="1.1" id="XMLID_65_" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-10.32 -10.32 44.64 44.64" xml:space="preserve" stroke="#000000" stroke-width="0.00024000000000000003">
                           <g id="SVGRepo_bgCarrier" stroke-width="0">
-                            <rect x="-10.32" y="-10.32" width="44.64" height="44.64" rx="22.32" fill="#ffffff"
-                              strokewidth="0"></rect>
+                            <rect x="-10.32" y="-10.32" width="44.64" height="44.64" rx="22.32" fill="#ffffff" strokewidth="0"></rect>
                           </g>
                           <g id="SVGRepo_iconCarrier">
                             <g id="article">
                               <g>
-                                <path
-                                  d="M20.5,22H4c-0.2,0-0.3,0-0.5,0C1.6,22,0,20.4,0,18.5V6h5V2h19v16.5C24,20.4,22.4,22,20.5,22z M6.7,20h13.8 c0.8,0,1.5-0.7,1.5-1.5V4H7v14.5C7,19,6.9,19.5,6.7,20z M2,8v10.5C2,19.3,2.7,20,3.5,20S5,19.3,5,18.5V8H2z">
+                                <path d="M20.5,22H4c-0.2,0-0.3,0-0.5,0C1.6,22,0,20.4,0,18.5V6h5V2h19v16.5C24,20.4,22.4,22,20.5,22z M6.7,20h13.8 c0.8,0,1.5-0.7,1.5-1.5V4H7v14.5C7,19,6.9,19.5,6.7,20z M2,8v10.5C2,19.3,2.7,20,3.5,20S5,19.3,5,18.5V8H2z">
                                 </path>
                               </g>
                               <g>
@@ -779,8 +787,7 @@
                       <div class="rlr-banner-splide__content-desc-right">
                         <span class="rlr-banner-splide__payment-desc">Experience the Thrill of Climbing Mount Batur: The
                           Ultimate Guide</span>
-                        <a href="./blog" class="btn rlr-button rlr-banner-splide__book-now" href="/product-detail-page"
-                          tabindex="-1"> 3 min read </a>
+                        <a href="./blog" class="btn rlr-button rlr-banner-splide__book-now" href="/product-detail-page" tabindex="-1"> 3 min read </a>
                       </div>
                     </div>
                   </div>
@@ -789,9 +796,7 @@
               <!-- Banner slide 2 -->
               <li class="splide__slide rlr-banner-splide__slide">
                 <div class="rlr-banner-splide__image-wrapper">
-                  <img class="rlr-banner-splide__banner-img lazyload" data-sizes="auto"
-                    data-src="./assets/images/banner/banner-2.jpeg" src="./assets/images/banner/banner-2.jpeg"
-                    alt="#" />
+                  <img class="rlr-banner-splide__banner-img lazyload" data-sizes="auto" data-src="./assets/images/banner/banner-2.jpeg" src="./assets/images/banner/banner-2.jpeg" alt="#" />
                 </div>
                 <article class="rlr-banner-splide__content-wrapper">
                   <header class="rlr-banner-splide__header">
@@ -802,31 +807,24 @@
                     <div class="rlr-banner-splide__temperature">
                       <span>27° C</span>
                       <div class="rlr-banner-splide__arrows">
-                        <button class="rlr-banner-splide__arrow rlr-banner-splide__arrow--prev rlr-banner-js-arrow-prev"
-                          aria-label="prev button">
+                        <button class="rlr-banner-splide__arrow rlr-banner-splide__arrow--prev rlr-banner-js-arrow-prev" aria-label="prev button">
                           <span> <i class="rlr-icon-font flaticon-left"> </i> </span>
                         </button>
-                        <button class="rlr-banner-splide__arrow rlr-banner-splide__arrow--next rlr-banner-js-arrow-next"
-                          aria-label="next button">
+                        <button class="rlr-banner-splide__arrow rlr-banner-splide__arrow--next rlr-banner-js-arrow-next" aria-label="next button">
                           <span> <i class="rlr-icon-font flaticon-right"> </i> </span>
                         </button>
                       </div>
                     </div>
                     <div class="rlr-banner-splide__payment-option animate__animated animate__fadeInUp">
                       <span class="rlr-svg-font">
-                        <svg height="64" width="64" fill="#000000" version="1.1" id="XMLID_65_"
-                          xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                          viewBox="-10.32 -10.32 44.64 44.64" xml:space="preserve" stroke="#000000"
-                          stroke-width="0.00024000000000000003">
+                        <svg height="64" width="64" fill="#000000" version="1.1" id="XMLID_65_" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-10.32 -10.32 44.64 44.64" xml:space="preserve" stroke="#000000" stroke-width="0.00024000000000000003">
                           <g id="SVGRepo_bgCarrier" stroke-width="0">
-                            <rect x="-10.32" y="-10.32" width="44.64" height="44.64" rx="22.32" fill="#ffffff"
-                              strokewidth="0"></rect>
+                            <rect x="-10.32" y="-10.32" width="44.64" height="44.64" rx="22.32" fill="#ffffff" strokewidth="0"></rect>
                           </g>
                           <g id="SVGRepo_iconCarrier">
                             <g id="article">
                               <g>
-                                <path
-                                  d="M20.5,22H4c-0.2,0-0.3,0-0.5,0C1.6,22,0,20.4,0,18.5V6h5V2h19v16.5C24,20.4,22.4,22,20.5,22z M6.7,20h13.8 c0.8,0,1.5-0.7,1.5-1.5V4H7v14.5C7,19,6.9,19.5,6.7,20z M2,8v10.5C2,19.3,2.7,20,3.5,20S5,19.3,5,18.5V8H2z">
+                                <path d="M20.5,22H4c-0.2,0-0.3,0-0.5,0C1.6,22,0,20.4,0,18.5V6h5V2h19v16.5C24,20.4,22.4,22,20.5,22z M6.7,20h13.8 c0.8,0,1.5-0.7,1.5-1.5V4H7v14.5C7,19,6.9,19.5,6.7,20z M2,8v10.5C2,19.3,2.7,20,3.5,20S5,19.3,5,18.5V8H2z">
                                 </path>
                               </g>
                               <g>
@@ -847,8 +845,7 @@
                       <div class="rlr-banner-splide__content-desc-right">
                         <span class="rlr-banner-splide__payment-desc">Find Your Haven at the Beach: The Perfect
                           Escape</span>
-                        <a href="./blog" class="btn rlr-button rlr-banner-splide__book-now" href="/product-detail-page"
-                          tabindex="-1"> 4 mins read </a>
+                        <a href="./blog" class="btn rlr-button rlr-banner-splide__book-now" href="/product-detail-page" tabindex="-1"> 4 mins read </a>
                       </div>
                     </div>
                   </div>
@@ -864,28 +861,23 @@
       <form class="rlr-banner-search rlr-banner-search--hero-half-mast">
         <div class="rlr-banner-search__input-wrapper">
           <!-- Destination -->
-          <div
-            class="rlr-banner-input-group rlr-banner-input-group rlr-banner-input-group--home-search rlr-js-autocomplete-demo rlr-banner-search__banner-input rlr-js-search-layout-wrapper">
+          <div class="rlr-banner-input-group rlr-banner-input-group rlr-banner-input-group--home-search rlr-js-autocomplete-demo rlr-banner-search__banner-input rlr-js-search-layout-wrapper">
             <label class="rlr-banner-input-group__label" for="destination_input">
               <mark>Lokasi</mark>
             </label>
             <div class="rlr-banner-input-group__input-wrapper">
-              <input id="destination_input" name="location" type="text" autocomplete="off"
-                class="rlr-banner-input-group__input destination_input" placeholder="Pilih Destinasi" />
+              <input id="destination_input" name="location" type="text" autocomplete="off" class="rlr-banner-input-group__input destination_input" placeholder="Pilih Destinasi" />
               <i class="rlr-icon-font flaticon-map-marker"> </i>
               <ul id="home_destination_results" class="rlr-banner-input-group--location-dropdown rlr-autocomplete"></ul>
             </div>
           </div>
           <!-- Category -->
-          <div
-            class="rlr-banner-input-group rlr-js-autocomplete-activity-demo rlr-banner-search__banner-input rlr-js-search-layout-wrapper">
+          <div class="rlr-banner-input-group rlr-js-autocomplete-activity-demo rlr-banner-search__banner-input rlr-js-search-layout-wrapper">
             <label class="rlr-banner-input-group__label" for="rlr-banner-input-group-activity">
               <mark>Kategori</mark>
             </label>
             <div class="rlr-banner-input-group__input-wrapper">
-              <input id="rlr-banner-input-group-activity" name="activity" type="text" autocomplete="off"
-                class="rlr-banner-input-group__input activity_autocomplete"
-                placeholder="Akomodasi, objek wisata, makanan & minuman" />
+              <input id="rlr-banner-input-group-activity" name="activity" type="text" autocomplete="off" class="rlr-banner-input-group__input activity_autocomplete" placeholder="Akomodasi, objek wisata, makanan & minuman" />
               <i class="rlr-icon-font flaticon-outline-down"> </i>
               <ul id="autocomplete-results" class="rlr-banner-input-group--activity-dropdown rlr-autocomplete"></ul>
             </div>
@@ -912,8 +904,7 @@
                 <span class="rlr-section__title--sub">Tempat terpopuler di Bali yang dapat Anda kunjungi</span>
               </div>
               <div class="button-row">
-                <button type="button" class="btn rlr-button button button--previous rlr-button--carousel"
-                  aria-label="Previous">
+                <button type="button" class="btn rlr-button button button--previous rlr-button--carousel" aria-label="Previous">
                   <i class="rlr-icon-font flaticon-left-chevron"> </i>
                 </button>
                 <div class="button-group button-group--cells">
@@ -933,9 +924,7 @@
                   <figure class="rlr-product-card__image-wrapper">
                     <span class="rlr-badge rlr-badge-- rlr-badge--accent-blue rlr-product-card__badge"> Akomodasi </span>
                     <div class="rlr-product-detail-header__button-wrapper">
-                      <button type="button"
-                        class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button--light rlr-wishlist-button rlr-js-action-wishlist"
-                        aria-label="Save to Wishlist">
+                      <button type="button" class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button--light rlr-wishlist-button rlr-js-action-wishlist" aria-label="Save to Wishlist">
                         <i class="rlr-icon-font flaticon-heart-1"> </i>
                       </button>
                       <span class="rlr-product-detail-header__helptext rlr-js-helptext"></span>
@@ -944,30 +933,19 @@
                       <div class="swiper rlr-js-product-multi-image-swiper">
                         <div class="swiper-wrapper">
                           <div class="swiper-slide">
-                            <img itemprop="image" data-sizes="auto"
-                              data-src="./assets/images/product-images/small/01.jpg"
-                              data-srcset="./assets/images/product-images/small/01.jpg" class="lazyload"
-                              alt="product-image" />
+                            <img itemprop="image" data-sizes="auto" data-src="./assets/images/product-images/small/01.jpg" data-srcset="./assets/images/product-images/small/01.jpg" class="lazyload" alt="product-image" />
                           </div>
                           <div class="swiper-slide">
-                            <img itemprop="image" data-sizes="auto"
-                              data-src="./assets/images/product-images/small/02.jpg"
-                              data-srcset="./assets/images/product-images/small/02.jpg" class="lazyload"
-                              alt="product-image" />
+                            <img itemprop="image" data-sizes="auto" data-src="./assets/images/product-images/small/02.jpg" data-srcset="./assets/images/product-images/small/02.jpg" class="lazyload" alt="product-image" />
                           </div>
                           <div class="swiper-slide">
-                            <img itemprop="image" data-sizes="auto"
-                              data-src="./assets/images/product-images/small/03.jpg"
-                              data-srcset="./assets/images/product-images/small/03.jpg" class="lazyload"
-                              alt="product-image" />
+                            <img itemprop="image" data-sizes="auto" data-src="./assets/images/product-images/small/03.jpg" data-srcset="./assets/images/product-images/small/03.jpg" class="lazyload" alt="product-image" />
                           </div>
                         </div>
-                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--prev"
-                          aria-label="prev button">
+                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--prev" aria-label="prev button">
                           <i class="rlr-icon-font flaticon-left-chevron"> </i>
                         </button>
-                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--next"
-                          aria-label="next button">
+                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--next" aria-label="next button">
                           <i class="rlr-icon-font flaticon-chevron"> </i>
                         </button>
                       </div>
@@ -989,15 +967,12 @@
                     </header>
                     <!-- Product card body -->
                     <div class="rlr-product-card__details">
-                      <div class="rlr-product-card__prices" itemprop="offers" itemscope
-                        itemtype="https://schema.org/Offer">
+                      <div class="rlr-product-card__prices" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
                         <span class="rlr-product-card__from">Open today </span>
                         <div class="rlr-icon-text rlr-product-card__icon-text"><span class="">5AM - 8PM</span></div>
                       </div>
-                      <div class="rlr-product-card__ratings" itemprop="aggregateRating" itemscope
-                        itemtype="https://schema.org/AggregateRating">
-                        <div class="rlr-review-stars" itemprop="ratingValue" itemscope
-                          itemtype="https://schema.org/Product">
+                      <div class="rlr-product-card__ratings" itemprop="aggregateRating" itemscope itemtype="https://schema.org/AggregateRating">
+                        <div class="rlr-review-stars" itemprop="ratingValue" itemscope itemtype="https://schema.org/Product">
                           <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i>
                           <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i>
                           <i class="rlr-icon-font flaticon-star"> </i>
@@ -1013,11 +988,9 @@
                 <article class="rlr-product-card rlr-product-card--v3" itemscope itemtype="https://schema.org/Product">
                   <!-- Product card image -->
                   <figure class="rlr-product-card__image-wrapper">
-                    <span class="rlr-badge rlr-badge-- rlr-badge--accent-red rlr-product-card__badge"> Makanan & Minuman </span>
+                    <span class="rlr-badge rlr-badge-- rlr-badge--accent-red rlr-product-card__badge"> F&B </span>
                     <div class="rlr-product-detail-header__button-wrapper">
-                      <button type="button"
-                        class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button--light rlr-wishlist-button rlr-js-action-wishlist"
-                        aria-label="Save to Wishlist">
+                      <button type="button" class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button--light rlr-wishlist-button rlr-js-action-wishlist" aria-label="Save to Wishlist">
                         <i class="rlr-icon-font flaticon-heart-1"> </i>
                       </button>
                       <span class="rlr-product-detail-header__helptext rlr-js-helptext"></span>
@@ -1026,30 +999,19 @@
                       <div class="swiper rlr-js-product-multi-image-swiper">
                         <div class="swiper-wrapper">
                           <div class="swiper-slide">
-                            <img itemprop="image" data-sizes="auto"
-                              data-src="./assets/images/product-images/small/01.jpg"
-                              data-srcset="./assets/images/product-images/small/01.jpg" class="lazyload"
-                              alt="product-image" />
+                            <img itemprop="image" data-sizes="auto" data-src="./assets/images/product-images/small/01.jpg" data-srcset="./assets/images/product-images/small/01.jpg" class="lazyload" alt="product-image" />
                           </div>
                           <div class="swiper-slide">
-                            <img itemprop="image" data-sizes="auto"
-                              data-src="./assets/images/product-images/small/02.jpg"
-                              data-srcset="./assets/images/product-images/small/02.jpg" class="lazyload"
-                              alt="product-image" />
+                            <img itemprop="image" data-sizes="auto" data-src="./assets/images/product-images/small/02.jpg" data-srcset="./assets/images/product-images/small/02.jpg" class="lazyload" alt="product-image" />
                           </div>
                           <div class="swiper-slide">
-                            <img itemprop="image" data-sizes="auto"
-                              data-src="./assets/images/product-images/small/03.jpg"
-                              data-srcset="./assets/images/product-images/small/03.jpg" class="lazyload"
-                              alt="product-image" />
+                            <img itemprop="image" data-sizes="auto" data-src="./assets/images/product-images/small/03.jpg" data-srcset="./assets/images/product-images/small/03.jpg" class="lazyload" alt="product-image" />
                           </div>
                         </div>
-                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--prev"
-                          aria-label="prev button">
+                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--prev" aria-label="prev button">
                           <i class="rlr-icon-font flaticon-left-chevron"> </i>
                         </button>
-                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--next"
-                          aria-label="next button">
+                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--next" aria-label="next button">
                           <i class="rlr-icon-font flaticon-chevron"> </i>
                         </button>
                       </div>
@@ -1071,15 +1033,12 @@
                     </header>
                     <!-- Product card body -->
                     <div class="rlr-product-card__details">
-                      <div class="rlr-product-card__prices" itemprop="offers" itemscope
-                        itemtype="https://schema.org/Offer">
+                      <div class="rlr-product-card__prices" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
                         <span class="rlr-product-card__from">Open today </span>
                         <div class="rlr-icon-text rlr-product-card__icon-text"><span class="">5AM - 8PM</span></div>
                       </div>
-                      <div class="rlr-product-card__ratings" itemprop="aggregateRating" itemscope
-                        itemtype="https://schema.org/AggregateRating">
-                        <div class="rlr-review-stars" itemprop="ratingValue" itemscope
-                          itemtype="https://schema.org/Product">
+                      <div class="rlr-product-card__ratings" itemprop="aggregateRating" itemscope itemtype="https://schema.org/AggregateRating">
+                        <div class="rlr-review-stars" itemprop="ratingValue" itemscope itemtype="https://schema.org/Product">
                           <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i>
                           <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i>
                           <i class="rlr-icon-font flaticon-star"> </i>
@@ -1098,9 +1057,7 @@
                     <span class="rlr-badge rlr-badge-- rlr-badge--accent-black rlr-product-card__badge"> Objek Wisata
                     </span>
                     <div class="rlr-product-detail-header__button-wrapper">
-                      <button type="button"
-                        class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button--light rlr-wishlist-button rlr-js-action-wishlist"
-                        aria-label="Save to Wishlist">
+                      <button type="button" class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button--light rlr-wishlist-button rlr-js-action-wishlist" aria-label="Save to Wishlist">
                         <i class="rlr-icon-font flaticon-heart-1"> </i>
                       </button>
                       <span class="rlr-product-detail-header__helptext rlr-js-helptext"></span>
@@ -1109,30 +1066,19 @@
                       <div class="swiper rlr-js-product-multi-image-swiper">
                         <div class="swiper-wrapper">
                           <div class="swiper-slide">
-                            <img itemprop="image" data-sizes="auto"
-                              data-src="./assets/images/product-images/small/01.jpg"
-                              data-srcset="./assets/images/product-images/small/01.jpg" class="lazyload"
-                              alt="product-image" />
+                            <img itemprop="image" data-sizes="auto" data-src="./assets/images/product-images/small/01.jpg" data-srcset="./assets/images/product-images/small/01.jpg" class="lazyload" alt="product-image" />
                           </div>
                           <div class="swiper-slide">
-                            <img itemprop="image" data-sizes="auto"
-                              data-src="./assets/images/product-images/small/02.jpg"
-                              data-srcset="./assets/images/product-images/small/02.jpg" class="lazyload"
-                              alt="product-image" />
+                            <img itemprop="image" data-sizes="auto" data-src="./assets/images/product-images/small/02.jpg" data-srcset="./assets/images/product-images/small/02.jpg" class="lazyload" alt="product-image" />
                           </div>
                           <div class="swiper-slide">
-                            <img itemprop="image" data-sizes="auto"
-                              data-src="./assets/images/product-images/small/03.jpg"
-                              data-srcset="./assets/images/product-images/small/03.jpg" class="lazyload"
-                              alt="product-image" />
+                            <img itemprop="image" data-sizes="auto" data-src="./assets/images/product-images/small/03.jpg" data-srcset="./assets/images/product-images/small/03.jpg" class="lazyload" alt="product-image" />
                           </div>
                         </div>
-                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--prev"
-                          aria-label="prev button">
+                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--prev" aria-label="prev button">
                           <i class="rlr-icon-font flaticon-left-chevron"> </i>
                         </button>
-                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--next"
-                          aria-label="next button">
+                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--next" aria-label="next button">
                           <i class="rlr-icon-font flaticon-chevron"> </i>
                         </button>
                       </div>
@@ -1154,15 +1100,12 @@
                     </header>
                     <!-- Product card body -->
                     <div class="rlr-product-card__details">
-                      <div class="rlr-product-card__prices" itemprop="offers" itemscope
-                        itemtype="https://schema.org/Offer">
+                      <div class="rlr-product-card__prices" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
                         <span class="rlr-product-card__from">Open today </span>
                         <div class="rlr-icon-text rlr-product-card__icon-text"><span class="">5AM - 8PM</span></div>
                       </div>
-                      <div class="rlr-product-card__ratings" itemprop="aggregateRating" itemscope
-                        itemtype="https://schema.org/AggregateRating">
-                        <div class="rlr-review-stars" itemprop="ratingValue" itemscope
-                          itemtype="https://schema.org/Product">
+                      <div class="rlr-product-card__ratings" itemprop="aggregateRating" itemscope itemtype="https://schema.org/AggregateRating">
+                        <div class="rlr-review-stars" itemprop="ratingValue" itemscope itemtype="https://schema.org/Product">
                           <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i>
                           <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i>
                           <i class="rlr-icon-font flaticon-star"> </i>
@@ -1178,11 +1121,9 @@
                 <article class="rlr-product-card rlr-product-card--v3" itemscope itemtype="https://schema.org/Product">
                   <!-- Product card image -->
                   <figure class="rlr-product-card__image-wrapper">
-                    <span class="rlr-badge rlr-badge-- rlr-badge--accent-red rlr-product-card__badge"> Makanan & Minuman </span>
+                    <span class="rlr-badge rlr-badge-- rlr-badge--accent-red rlr-product-card__badge"> F&B </span>
                     <div class="rlr-product-detail-header__button-wrapper">
-                      <button type="button"
-                        class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button--light rlr-wishlist-button rlr-js-action-wishlist"
-                        aria-label="Save to Wishlist">
+                      <button type="button" class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button--light rlr-wishlist-button rlr-js-action-wishlist" aria-label="Save to Wishlist">
                         <i class="rlr-icon-font flaticon-heart-1"> </i>
                       </button>
                       <span class="rlr-product-detail-header__helptext rlr-js-helptext"></span>
@@ -1191,30 +1132,19 @@
                       <div class="swiper rlr-js-product-multi-image-swiper">
                         <div class="swiper-wrapper">
                           <div class="swiper-slide">
-                            <img itemprop="image" data-sizes="auto"
-                              data-src="./assets/images/product-images/small/01.jpg"
-                              data-srcset="./assets/images/product-images/small/01.jpg" class="lazyload"
-                              alt="product-image" />
+                            <img itemprop="image" data-sizes="auto" data-src="./assets/images/product-images/small/01.jpg" data-srcset="./assets/images/product-images/small/01.jpg" class="lazyload" alt="product-image" />
                           </div>
                           <div class="swiper-slide">
-                            <img itemprop="image" data-sizes="auto"
-                              data-src="./assets/images/product-images/small/02.jpg"
-                              data-srcset="./assets/images/product-images/small/02.jpg" class="lazyload"
-                              alt="product-image" />
+                            <img itemprop="image" data-sizes="auto" data-src="./assets/images/product-images/small/02.jpg" data-srcset="./assets/images/product-images/small/02.jpg" class="lazyload" alt="product-image" />
                           </div>
                           <div class="swiper-slide">
-                            <img itemprop="image" data-sizes="auto"
-                              data-src="./assets/images/product-images/small/03.jpg"
-                              data-srcset="./assets/images/product-images/small/03.jpg" class="lazyload"
-                              alt="product-image" />
+                            <img itemprop="image" data-sizes="auto" data-src="./assets/images/product-images/small/03.jpg" data-srcset="./assets/images/product-images/small/03.jpg" class="lazyload" alt="product-image" />
                           </div>
                         </div>
-                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--prev"
-                          aria-label="prev button">
+                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--prev" aria-label="prev button">
                           <i class="rlr-icon-font flaticon-left-chevron"> </i>
                         </button>
-                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--next"
-                          aria-label="next button">
+                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--next" aria-label="next button">
                           <i class="rlr-icon-font flaticon-chevron"> </i>
                         </button>
                       </div>
@@ -1236,15 +1166,12 @@
                     </header>
                     <!-- Product card body -->
                     <div class="rlr-product-card__details">
-                      <div class="rlr-product-card__prices" itemprop="offers" itemscope
-                        itemtype="https://schema.org/Offer">
+                      <div class="rlr-product-card__prices" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
                         <span class="rlr-product-card__from">Open today </span>
                         <div class="rlr-icon-text rlr-product-card__icon-text"><span class="">5AM - 8PM</span></div>
                       </div>
-                      <div class="rlr-product-card__ratings" itemprop="aggregateRating" itemscope
-                        itemtype="https://schema.org/AggregateRating">
-                        <div class="rlr-review-stars" itemprop="ratingValue" itemscope
-                          itemtype="https://schema.org/Product">
+                      <div class="rlr-product-card__ratings" itemprop="aggregateRating" itemscope itemtype="https://schema.org/AggregateRating">
+                        <div class="rlr-review-stars" itemprop="ratingValue" itemscope itemtype="https://schema.org/Product">
                           <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i>
                           <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i>
                           <i class="rlr-icon-font flaticon-star"> </i>
@@ -1263,9 +1190,7 @@
                     <span class="rlr-badge rlr-badge-- rlr-badge--accent-red rlr-product-card__badge"> Makanan & Minuman
                     </span>
                     <div class="rlr-product-detail-header__button-wrapper">
-                      <button type="button"
-                        class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button--light rlr-wishlist-button rlr-js-action-wishlist"
-                        aria-label="Save to Wishlist">
+                      <button type="button" class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button--light rlr-wishlist-button rlr-js-action-wishlist" aria-label="Save to Wishlist">
                         <i class="rlr-icon-font flaticon-heart-1"> </i>
                       </button>
                       <span class="rlr-product-detail-header__helptext rlr-js-helptext"></span>
@@ -1274,30 +1199,19 @@
                       <div class="swiper rlr-js-product-multi-image-swiper">
                         <div class="swiper-wrapper">
                           <div class="swiper-slide">
-                            <img itemprop="image" data-sizes="auto"
-                              data-src="./assets/images/product-images/small/01.jpg"
-                              data-srcset="./assets/images/product-images/small/01.jpg" class="lazyload"
-                              alt="product-image" />
+                            <img itemprop="image" data-sizes="auto" data-src="./assets/images/product-images/small/01.jpg" data-srcset="./assets/images/product-images/small/01.jpg" class="lazyload" alt="product-image" />
                           </div>
                           <div class="swiper-slide">
-                            <img itemprop="image" data-sizes="auto"
-                              data-src="./assets/images/product-images/small/02.jpg"
-                              data-srcset="./assets/images/product-images/small/02.jpg" class="lazyload"
-                              alt="product-image" />
+                            <img itemprop="image" data-sizes="auto" data-src="./assets/images/product-images/small/02.jpg" data-srcset="./assets/images/product-images/small/02.jpg" class="lazyload" alt="product-image" />
                           </div>
                           <div class="swiper-slide">
-                            <img itemprop="image" data-sizes="auto"
-                              data-src="./assets/images/product-images/small/03.jpg"
-                              data-srcset="./assets/images/product-images/small/03.jpg" class="lazyload"
-                              alt="product-image" />
+                            <img itemprop="image" data-sizes="auto" data-src="./assets/images/product-images/small/03.jpg" data-srcset="./assets/images/product-images/small/03.jpg" class="lazyload" alt="product-image" />
                           </div>
                         </div>
-                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--prev"
-                          aria-label="prev button">
+                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--prev" aria-label="prev button">
                           <i class="rlr-icon-font flaticon-left-chevron"> </i>
                         </button>
-                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--next"
-                          aria-label="next button">
+                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--next" aria-label="next button">
                           <i class="rlr-icon-font flaticon-chevron"> </i>
                         </button>
                       </div>
@@ -1319,15 +1233,12 @@
                     </header>
                     <!-- Product card body -->
                     <div class="rlr-product-card__details">
-                      <div class="rlr-product-card__prices" itemprop="offers" itemscope
-                        itemtype="https://schema.org/Offer">
+                      <div class="rlr-product-card__prices" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
                         <span class="rlr-product-card__from">Open today </span>
                         <div class="rlr-icon-text rlr-product-card__icon-text"><span class="">5AM - 8PM</span></div>
                       </div>
-                      <div class="rlr-product-card__ratings" itemprop="aggregateRating" itemscope
-                        itemtype="https://schema.org/AggregateRating">
-                        <div class="rlr-review-stars" itemprop="ratingValue" itemscope
-                          itemtype="https://schema.org/Product">
+                      <div class="rlr-product-card__ratings" itemprop="aggregateRating" itemscope itemtype="https://schema.org/AggregateRating">
+                        <div class="rlr-review-stars" itemprop="ratingValue" itemscope itemtype="https://schema.org/Product">
                           <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i>
                           <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i>
                           <i class="rlr-icon-font flaticon-star"> </i>
@@ -1346,9 +1257,7 @@
                     <span class="rlr-badge rlr-badge-- rlr-badge--accent-red rlr-product-card__badge"> Makanan & Minuman
                     </span>
                     <div class="rlr-product-detail-header__button-wrapper">
-                      <button type="button"
-                        class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button--light rlr-wishlist-button rlr-js-action-wishlist"
-                        aria-label="Save to Wishlist">
+                      <button type="button" class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button--light rlr-wishlist-button rlr-js-action-wishlist" aria-label="Save to Wishlist">
                         <i class="rlr-icon-font flaticon-heart-1"> </i>
                       </button>
                       <span class="rlr-product-detail-header__helptext rlr-js-helptext"></span>
@@ -1357,30 +1266,19 @@
                       <div class="swiper rlr-js-product-multi-image-swiper">
                         <div class="swiper-wrapper">
                           <div class="swiper-slide">
-                            <img itemprop="image" data-sizes="auto"
-                              data-src="./assets/images/product-images/small/01.jpg"
-                              data-srcset="./assets/images/product-images/small/01.jpg" class="lazyload"
-                              alt="product-image" />
+                            <img itemprop="image" data-sizes="auto" data-src="./assets/images/product-images/small/01.jpg" data-srcset="./assets/images/product-images/small/01.jpg" class="lazyload" alt="product-image" />
                           </div>
                           <div class="swiper-slide">
-                            <img itemprop="image" data-sizes="auto"
-                              data-src="./assets/images/product-images/small/02.jpg"
-                              data-srcset="./assets/images/product-images/small/02.jpg" class="lazyload"
-                              alt="product-image" />
+                            <img itemprop="image" data-sizes="auto" data-src="./assets/images/product-images/small/02.jpg" data-srcset="./assets/images/product-images/small/02.jpg" class="lazyload" alt="product-image" />
                           </div>
                           <div class="swiper-slide">
-                            <img itemprop="image" data-sizes="auto"
-                              data-src="./assets/images/product-images/small/03.jpg"
-                              data-srcset="./assets/images/product-images/small/03.jpg" class="lazyload"
-                              alt="product-image" />
+                            <img itemprop="image" data-sizes="auto" data-src="./assets/images/product-images/small/03.jpg" data-srcset="./assets/images/product-images/small/03.jpg" class="lazyload" alt="product-image" />
                           </div>
                         </div>
-                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--prev"
-                          aria-label="prev button">
+                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--prev" aria-label="prev button">
                           <i class="rlr-icon-font flaticon-left-chevron"> </i>
                         </button>
-                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--next"
-                          aria-label="next button">
+                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--next" aria-label="next button">
                           <i class="rlr-icon-font flaticon-chevron"> </i>
                         </button>
                       </div>
@@ -1402,15 +1300,12 @@
                     </header>
                     <!-- Product card body -->
                     <div class="rlr-product-card__details">
-                      <div class="rlr-product-card__prices" itemprop="offers" itemscope
-                        itemtype="https://schema.org/Offer">
+                      <div class="rlr-product-card__prices" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
                         <span class="rlr-product-card__from">Open today </span>
                         <div class="rlr-icon-text rlr-product-card__icon-text"><span class="">5AM - 8PM</span></div>
                       </div>
-                      <div class="rlr-product-card__ratings" itemprop="aggregateRating" itemscope
-                        itemtype="https://schema.org/AggregateRating">
-                        <div class="rlr-review-stars" itemprop="ratingValue" itemscope
-                          itemtype="https://schema.org/Product">
+                      <div class="rlr-product-card__ratings" itemprop="aggregateRating" itemscope itemtype="https://schema.org/AggregateRating">
+                        <div class="rlr-review-stars" itemprop="ratingValue" itemscope itemtype="https://schema.org/Product">
                           <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i>
                           <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i>
                           <i class="rlr-icon-font flaticon-star"> </i>
@@ -1438,11 +1333,9 @@
           <div class="rlr-masonary-grid__one">
             <!-- Destination card -->
             <a class="rlr-destination-card" href="./search">
-              <img data-sizes="auto" data-src="./assets/images/dest/01.jpg"
-                data-srcset="./assets/images/dest/01@2x.jpg 2x" class="rlr-destination-card__img lazyload" alt="..." />
+              <img data-sizes="auto" data-src="./assets/images/dest/01.jpg" data-srcset="./assets/images/dest/01@2x.jpg 2x" class="rlr-destination-card__img lazyload" alt="..." />
               <span class="rlr-badge rlr-badge--left rlr-badge-- rlr-badge--abs rlr-badge--abs-dest"> 200+ </span>
-              <div
-                class="rlr-destination-card__info rlr-destination-card__info--left rlr-destination-card__info--bottom">
+              <div class="rlr-destination-card__info rlr-destination-card__info--left rlr-destination-card__info--bottom">
                 <h2 class="rlr-destination-card__info--main">Ubud</h2>
                 <p class="rlr-destination-card__info--sub">366 KM dari Tukad Badung</p>
               </div>
@@ -1451,11 +1344,9 @@
           <div class="rlr-masonary-grid__two">
             <!-- Destination card -->
             <a class="rlr-destination-card" href="./search">
-              <img data-sizes="auto" data-src="./assets/images/dest/02.jpg"
-                data-srcset="./assets/images/dest/02@2x.jpg 2x" class="rlr-destination-card__img lazyload" alt="..." />
+              <img data-sizes="auto" data-src="./assets/images/dest/02.jpg" data-srcset="./assets/images/dest/02@2x.jpg 2x" class="rlr-destination-card__img lazyload" alt="..." />
               <span class="rlr-badge rlr-badge--left rlr-badge-- rlr-badge--abs rlr-badge--abs-dest"> 320 Tujuan Wisata </span>
-              <div
-                class="rlr-destination-card__info rlr-destination-card__info--left rlr-destination-card__info--bottom">
+              <div class="rlr-destination-card__info rlr-destination-card__info--left rlr-destination-card__info--bottom">
                 <h2 class="rlr-destination-card__info--main">Canggu</h2>
                 <p class="rlr-destination-card__info--sub">577 KM dari Tukad Badung</p>
               </div>
@@ -1464,11 +1355,9 @@
           <div class="rlr-masonary-grid__three">
             <!-- Destination card -->
             <a class="rlr-destination-card" href="./search">
-              <img data-sizes="auto" data-src="./assets/images/dest/03.jpg"
-                data-srcset="./assets/images/dest/03@2x.jpg 2x" class="rlr-destination-card__img lazyload" alt="..." />
+              <img data-sizes="auto" data-src="./assets/images/dest/03.jpg" data-srcset="./assets/images/dest/03@2x.jpg 2x" class="rlr-destination-card__img lazyload" alt="..." />
               <span class="rlr-badge rlr-badge--left rlr-badge-- rlr-badge--abs rlr-badge--abs-dest"> 58 Tujuan Wisata </span>
-              <div
-                class="rlr-destination-card__info rlr-destination-card__info--left rlr-destination-card__info--bottom">
+              <div class="rlr-destination-card__info rlr-destination-card__info--left rlr-destination-card__info--bottom">
                 <h2 class="rlr-destination-card__info--main">Penida Island</h2>
                 <p class="rlr-destination-card__info--sub">327 KM dari Tukad Badung</p>
               </div>
@@ -1477,11 +1366,9 @@
           <div class="rlr-masonary-grid__four">
             <!-- Destination card -->
             <a class="rlr-destination-card" href="./search">
-              <img data-sizes="auto" data-src="./assets/images/dest/04.jpg"
-                data-srcset="./assets/images/dest/04@2x.jpg 2x" class="rlr-destination-card__img lazyload" alt="..." />
+              <img data-sizes="auto" data-src="./assets/images/dest/04.jpg" data-srcset="./assets/images/dest/04@2x.jpg 2x" class="rlr-destination-card__img lazyload" alt="..." />
               <span class="rlr-badge rlr-badge--left rlr-badge-- rlr-badge--abs rlr-badge--abs-dest"> 406 Tujuan Wisata </span>
-              <div
-                class="rlr-destination-card__info rlr-destination-card__info--left rlr-destination-card__info--bottom">
+              <div class="rlr-destination-card__info rlr-destination-card__info--left rlr-destination-card__info--bottom">
                 <h2 class="rlr-destination-card__info--main">Kuta</h2>
                 <p class="rlr-destination-card__info--sub">271 KM dari Tukad Badung</p>
               </div>
@@ -1490,11 +1377,9 @@
           <div class="rlr-masonary-grid__five">
             <!-- Destination card -->
             <a class="rlr-destination-card" href="./search">
-              <img data-sizes="auto" data-src="./assets/images/dest/05.jpg"
-                data-srcset="./assets/images/dest/05@2x.jpg 2x" class="rlr-destination-card__img lazyload" alt="..." />
+              <img data-sizes="auto" data-src="./assets/images/dest/05.jpg" data-srcset="./assets/images/dest/05@2x.jpg 2x" class="rlr-destination-card__img lazyload" alt="..." />
               <span class="rlr-badge rlr-badge--left rlr-badge-- rlr-badge--abs rlr-badge--abs-dest"> 37<br>Tujuan Wisata </span>
-              <div
-                class="rlr-destination-card__info rlr-destination-card__info--left rlr-destination-card__info--bottom">
+              <div class="rlr-destination-card__info rlr-destination-card__info--left rlr-destination-card__info--bottom">
                 <h2 class="rlr-destination-card__info--main">Jimbaran</h2>
                 <p class="rlr-destination-card__info--sub">780 KM dari Tukad Badung</p>
               </div>
@@ -1503,11 +1388,9 @@
           <div class="rlr-masonary-grid__six">
             <!-- Destination card -->
             <a class="rlr-destination-card" href="./search">
-              <img data-sizes="auto" data-src="./assets/images/dest/06.jpg"
-                data-srcset="./assets/images/dest/06@2x.jpg 2x" class="rlr-destination-card__img lazyload" alt="..." />
+              <img data-sizes="auto" data-src="./assets/images/dest/06.jpg" data-srcset="./assets/images/dest/06@2x.jpg 2x" class="rlr-destination-card__img lazyload" alt="..." />
               <span class="rlr-badge rlr-badge--left rlr-badge-- rlr-badge--abs rlr-badge--abs-dest"> 74 Tujuan Wisata </span>
-              <div
-                class="rlr-destination-card__info rlr-destination-card__info--left rlr-destination-card__info--bottom">
+              <div class="rlr-destination-card__info rlr-destination-card__info--left rlr-destination-card__info--bottom">
                 <h2 class="rlr-destination-card__info--main">Nusa Lembongan</h2>
                 <p class="rlr-destination-card__info--sub">872 KM dari Tukad Badung</p>
               </div>
@@ -1523,48 +1406,37 @@
           <div class="rlr-logos-slider__items">
             <div class="slide-track">
               <div class="slide">
-                <img data-sizes="auto" class="lazyload" data-src="./assets/images/logos/trivago.png" width="187px"
-                  height="64px" alt="partner logo" />
+                <img data-sizes="auto" class="lazyload" data-src="./assets/images/logos/trivago.png" width="187px" height="64px" alt="partner logo" />
               </div>
               <div class="slide">
-                <img data-sizes="auto" class="lazyload" data-src="./assets/images/logos/tripadvisor.png" width="187px"
-                  height="64px" alt="partner logo" />
+                <img data-sizes="auto" class="lazyload" data-src="./assets/images/logos/tripadvisor.png" width="187px" height="64px" alt="partner logo" />
               </div>
               <div class="slide">
-                <img data-sizes="auto" class="lazyload" data-src="./assets/images/logos/expedia.png" width="187px"
-                  height="64px" alt="partner logo" />
+                <img data-sizes="auto" class="lazyload" data-src="./assets/images/logos/expedia.png" width="187px" height="64px" alt="partner logo" />
               </div>
               <div class="slide">
-                <img data-sizes="auto" class="lazyload" data-src="./assets/images/logos/tailormade.png" width="187px"
-                  height="64px" alt="partner logo" />
+                <img data-sizes="auto" class="lazyload" data-src="./assets/images/logos/tailormade.png" width="187px" height="64px" alt="partner logo" />
               </div>
               <div class="slide">
-                <img data-sizes="auto" class="lazyload" data-src="./assets/images/logos/all-inclusive.png" width="187px"
-                  height="64px" alt="partner logo" />
+                <img data-sizes="auto" class="lazyload" data-src="./assets/images/logos/all-inclusive.png" width="187px" height="64px" alt="partner logo" />
               </div>
               <div class="slide">
-                <img data-sizes="auto" class="lazyload" data-src="./assets/images/logos/radisson.png" width="187px"
-                  height="64px" alt="partner logo" />
+                <img data-sizes="auto" class="lazyload" data-src="./assets/images/logos/radisson.png" width="187px" height="64px" alt="partner logo" />
               </div>
               <div class="slide">
-                <img data-sizes="auto" class="lazyload" data-src="./assets/images/logos/disneyland.png" width="187px"
-                  height="64px" alt="partner logo" />
+                <img data-sizes="auto" class="lazyload" data-src="./assets/images/logos/disneyland.png" width="187px" height="64px" alt="partner logo" />
               </div>
               <div class="slide">
-                <img data-sizes="auto" class="lazyload" data-src="./assets/images/logos/national-geographic.png"
-                  width="187px" height="64px" alt="partner logo" />
+                <img data-sizes="auto" class="lazyload" data-src="./assets/images/logos/national-geographic.png" width="187px" height="64px" alt="partner logo" />
               </div>
               <div class="slide">
-                <img data-sizes="auto" class="lazyload" data-src="./assets/images/logos/lonelyplanet.png" width="187px"
-                  height="64px" alt="partner logo" />
+                <img data-sizes="auto" class="lazyload" data-src="./assets/images/logos/lonelyplanet.png" width="187px" height="64px" alt="partner logo" />
               </div>
               <div class="slide">
-                <img data-sizes="auto" class="lazyload" data-src="./assets/images/logos/tailormade.png" width="187px"
-                  height="64px" alt="partner logo" />
+                <img data-sizes="auto" class="lazyload" data-src="./assets/images/logos/tailormade.png" width="187px" height="64px" alt="partner logo" />
               </div>
               <div class="slide">
-                <img data-sizes="auto" class="lazyload" data-src="./assets/images/logos/trivago.png" width="187px"
-                  height="64px" alt="partner logo" />
+                <img data-sizes="auto" class="lazyload" data-src="./assets/images/logos/trivago.png" width="187px" height="64px" alt="partner logo" />
               </div>
             </div>
           </div>
@@ -1581,7 +1453,7 @@
           <div class="navigation-brand-text">
             <div class="rlr-logo rlr-logo__navbar-brand rlr-logo--default mb-3">
               <a href="./index.html">
-                <img src="./assets/svg/logoipsum-287.svg" alt="#" class="" style="width: 200px;"/>
+                <img src="./assets/svg/logoipsum-287.svg" alt="#" class="" style="width: 200px;" />
               </a>
             </div>
           </div>
@@ -1591,57 +1463,57 @@
         </nav>
 
         <div class="d-flex rlr-footer__menu">
-        <nav class="rlr-footer__menu__col">
-          <!-- Footer menu col -->
-          <h4>Destinasi</h4>
-          <ul>
-            <li><a href="./search/">Ubud</a></li>
-            <li><a href="./search/">Canggu</a></li>
-            <li><a href="./search/">Jimbaran</a></li>
-            <li><a href="./search/">Nusa Penida</a></li>
-            <li><a href="./search/">Cari Destinasi</a></li>
-          </ul>
-        </nav>
-        <nav class="rlr-footer__menu__col">
-          <!-- Footer menu col -->
-          <h4>Kategori</h4>
-          <ul>
-            <li><a href="./search">Akomodasi</a></li>
-            <li><a href="./search/">Makanan & Minuman</a></li>
-            <li><a href="./search/">Objek Wisata</a></li>
-          </ul>
-        </nav>
-        <nav class="rlr-footer__menu__col">
-          <!-- Footer menu col -->
-          <h4>Lainnya</h4>
-          <ul>
-            <li><a href="./blog/">Blog</a></li>
-            <li><a href="./new-listing/">Daftarkan bisnis</a></li>
-            <li><a href="./contact/">Hubungi kami</a></li>
-          </ul>
-        </nav>
+          <nav class="rlr-footer__menu__col">
+            <!-- Footer menu col -->
+            <h4>Destinasi</h4>
+            <ul>
+              <li><a href="./search/">Ubud</a></li>
+              <li><a href="./search/">Canggu</a></li>
+              <li><a href="./search/">Jimbaran</a></li>
+              <li><a href="./search/">Nusa Penida</a></li>
+              <li><a href="./search/">Cari Destinasi</a></li>
+            </ul>
+          </nav>
+          <nav class="rlr-footer__menu__col">
+            <!-- Footer menu col -->
+            <h4>Kategori</h4>
+            <ul>
+              <li><a href="./search">Akomodasi</a></li>
+              <li><a href="./search/">Makanan & Minuman</a></li>
+              <li><a href="./search/">Objek Wisata</a></li>
+            </ul>
+          </nav>
+          <nav class="rlr-footer__menu__col">
+            <!-- Footer menu col -->
+            <h4>Lainnya</h4>
+            <ul>
+              <li><a href="./blog/">Blog</a></li>
+              <li><a href="./new-listing/">Daftarkan bisnis</a></li>
+              <li><a href="./contact/">Hubungi kami</a></li>
+            </ul>
+          </nav>
         </div>
 
       </div>
-    <!-- Footer bottom -->
-    <div class="rlr-footer__legal">
-      <div class="rlr-footer__legal__row rlr-footer__legal__row--top">
-      </div>
-      <!-- Footer copyright -->
-      <div class="rlr-footer__legal__row rlr-footer__legal__row--bottom">
-        <div class="rlr-footer__legal__row__col">
-          <span>2023 © E-Tourism</span>
+      <!-- Footer bottom -->
+      <div class="rlr-footer__legal">
+        <div class="rlr-footer__legal__row rlr-footer__legal__row--top">
         </div>
-        <!-- Footer social links -->
-        <div class="rlr-footer__legal__row__col">
-          <a href="https://twitter.com">Twitter</a>
-          <span class="separate">/</span>
-          <a href="https://facebook.com">Facebook</a>
-          <span class="separate">/</span>
-          <a href="https://instagram.com">Instagram</a>
+        <!-- Footer copyright -->
+        <div class="rlr-footer__legal__row rlr-footer__legal__row--bottom">
+          <div class="rlr-footer__legal__row__col">
+            <span>2023 © E-Tourism</span>
+          </div>
+          <!-- Footer social links -->
+          <div class="rlr-footer__legal__row__col">
+            <a href="https://twitter.com">Twitter</a>
+            <span class="separate">/</span>
+            <a href="https://facebook.com">Facebook</a>
+            <span class="separate">/</span>
+            <a href="https://instagram.com">Instagram</a>
+          </div>
         </div>
       </div>
-    </div>
   </footer>
   <!-- Scripts -->
   <script src="./vendors/navx/js/navigation.min.js" defer></script>
