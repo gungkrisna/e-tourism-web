@@ -68,7 +68,7 @@
   }
   
   /* Rating Star Widgets Style */
-.rating-stars ul {
+  .rating-stars ul {
     list-style-type:none;
     padding:0;
 
@@ -96,8 +96,8 @@
     color:#FF912C;
   }
   
-   /* Small devices */
-   @media (min-width: 576px), (max-width: 576px) {
+    /* Small devices */
+  @media (min-width: 576px), (max-width: 576px) {
     .modal-content {
       width: 90%;
     }

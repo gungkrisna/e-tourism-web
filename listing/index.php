@@ -1,5 +1,14 @@
 <?php
 include '../src/conn.php';
+include '../src/Business.php';
+include '../src/BusinessService.php';
+include '../src/BusinessPhoto.php';
+include '../src/Service.php';
+include '../src/Review.php';
+include '../src/ReviewPhoto.php';
+include '../src/FAQ.php';
+include '../src/Place.php';
+
 session_start();
 
 if (isset($_SESSION['user_id'])) {
@@ -9,72 +18,20 @@ if (isset($_SESSION['user_id'])) {
 }
 
 if (isset($_GET['id'])) {
-  $stmt = $conn->prepare('SELECT * FROM bisnis WHERE id_bisnis = ? AND status = ?');
-  $stmt->execute([$_GET['id'], 'disetujui']);
-  $bisnis = $stmt->fetch();
-
-  // fetch category
-  $stmt = $conn->prepare('SELECT * FROM kategori_bisnis WHERE id_bisnis = ?');
-  $stmt->execute([$_GET['id']]);
-  $kategori_bisnis = $stmt->fetch();
-
-  $stmt = $conn->prepare('SELECT * FROM kategori WHERE id_kategori = ?');
-  $stmt->execute([$kategori_bisnis['id_kategori']]);
-  $kategori = $stmt->fetch();
-
-  // fetch photos
-  $stmt = $conn->prepare('SELECT * FROM foto_bisnis WHERE id_bisnis = ?');
-  $stmt->execute([$_GET['id']]);
-  $foto_bisnis = $stmt->fetchAll();
-
-
-  // fetch reviews
-  $stmt = $conn->prepare('SELECT * FROM ulasan WHERE id_bisnis = ? AND status = ?');
-  $stmt->execute([$_GET['id'], 'publik']);
-  $ulasan = $stmt->fetchAll();
-
-  // fetch business rating
-  $stmt = $conn->prepare('SELECT SUM(rating) FROM ulasan WHERE id_bisnis = ? AND status = ?');
-  $stmt->execute([$_GET['id'], 'publik']);
-  $rating = $stmt->fetch();
-  $rating = $rating['SUM(rating)'];
-
-  // fetch available and unavailable business services
-  $stmt = $conn->prepare('SELECT * FROM layanan_bisnis WHERE id_bisnis = ? AND disediakan = ?');
-  $stmt->execute([$_GET['id'], true]);
-  $layanan_tersedia = $stmt->fetchAll();
-  $stmt->execute([$_GET['id'], false]);
-  $layanan_tidak_tersedia = $stmt->fetchAll();
-
-  // fetch faq
-  $stmt = $conn->prepare('SELECT * FROM faq_bisnis WHERE id_bisnis = ?');
-  $stmt->execute([$_GET['id']]);
-  $faqs = $stmt->fetchAll();
-
-  // fetch place
-  $stmt = $conn->prepare('SELECT * FROM wilayah_desa WHERE id_desa = ?');
-  $stmt->execute([$bisnis['id_desa']]);
-  $desa = $stmt->fetch();
-
-  $stmt = $conn->prepare('SELECT * FROM wilayah_kecamatan WHERE id_kecamatan = ?');
-  $stmt->execute([$desa['id_kecamatan']]);
-  $kecamatan = $stmt->fetch();
-
-  $stmt = $conn->prepare('SELECT * FROM wilayah_kabupaten WHERE id_kabupaten = ?');
-  $stmt->execute([$kecamatan['id_kabupaten']]);
-  $kabupaten = $stmt->fetch();
-
-  $stmt = $conn->prepare('SELECT * FROM wilayah_provinsi WHERE id_provinsi = ?');
-  $stmt->execute([$kabupaten['id_provinsi']]);
-  $provinsi = $stmt->fetch();
-}
-
-
-if (empty($bisnis)) {
+  $business_service = new BusinessService($conn);
+} else if (!isset($_GET['id']) || empty($business)) {
   header('HTTP/1.1 404 Not Found');
   include '../404.html'; //need to fix
   exit();
 }
+
+$business = $business_service->getBusinessById($_GET['id']);
+$photos = new BusinessPhoto($conn);
+$services = new Service($conn);
+$reviews = new Review($conn);
+$reviewphotos = new ReviewPhoto($conn);
+$faqs = new FAQ($conn);
+$place = new Place($conn);
 ?>
 
 <!DOCTYPE html>
@@ -84,7 +41,7 @@ if (empty($bisnis)) {
   <meta charset="UTF-8" />
   <meta name="description" content="Your vacation, tours and travel theme needs are all met at E-Tourism." />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title><?= $bisnis['nama'] ?> - E-Tourism</title>
+  <title><?= $business->nama ?> - E-Tourism</title>
   <!-- Favicon -->
   <link rel="shortcut icon" type="image/png" href="../assets/favicon.ico" />
   <!-- Plugins CSS -->
@@ -93,8 +50,10 @@ if (empty($bisnis)) {
   <link rel="stylesheet" href="../styles/main.css" />
   <!-- Main CSS -->
   <link rel="stylesheet" href="../styles/custom.css" />
-  <!-- JQuery -->
-  <script src="../vendors/jquery.min.js"></script>
+  <link rel="stylesheet" href="../styles/upload.css">
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin="" />
+
 </head>
 
 <body class="rlr-body">
@@ -105,7 +64,7 @@ if (empty($bisnis)) {
       <div class="navigation-header">
         <div class="navigation-brand-text">
           <div class="rlr-logo rlr-logo__navbar-brand rlr-logo--default">
-            <a href="../index.html">
+            <a href="../">
               <img src="../assets/svg/logoipsum-287.svg" alt="#" class="" />
             </a>
           </div>
@@ -118,7 +77,7 @@ if (empty($bisnis)) {
         <div class="navigation-body-header rlr-navigation__body-header">
           <div class="navigation-brand-text">
             <div class="rlr-logo rlr-logo__navbar-brand rlr-logo--default">
-              <a href="../index.html">
+              <a href="../">
                 <img src="../assets/svg/logoipsum-287.svg" alt="#" class="" />
               </a>
             </div>
@@ -132,557 +91,38 @@ if (empty($bisnis)) {
             <a class="navigation-link" href="../">Home</a>
           </li>
           <!-- Mega menu -->
-          <li class="navigation-item has-submenu">
+          <li class="navigation-item">
             <a class="navigation-link" href="#">Destinasi</a>
-            <ul class="navigation-megamenu navigation-submenu navigation-megamenu-half">
-              <li class="navigation-megamenu-container">
-                <ul class="navigation-tabs">
-                  <li class="rlr-navigation__tabbed-list">
-                    <ul class="navigation-tabs-nav">
-                      <li class="navigation-tabs-nav-item is-active"><a href="#">Badung</a></li>
-                      <li class="navigation-tabs-nav-item"><a href="#">Gianyar</a></li>
-                      <li class="navigation-tabs-nav-item"><a href="#">Klungkung</a></li>
-                      <li class="navigation-tabs-nav-item"><a href="#">Buleleng</a></li>
-                      <li class="navigation-tabs-nav-item"><a href="#">Denpasar</a></li>
-                      <li class="navigation-tabs-nav-item"><a href="#">Tabanan</a></li>
-                      <li class="navigation-tabs-nav-item"><a href="#">View All</a></li>
-                    </ul>
-                  </li>
-                  <li class="navigation-tabs-pane is-active">
-                    <ul class="navigation-row">
-                      <li class="navigation-col">
-                        <ul class="navigation-list">
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Botswana</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Egypt</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Ethiopia</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Ghana</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Kenya</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Madagascar</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Morocco</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Mozambique</a></span>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                      <li class="navigation-col">
-                        <ul class="navigation-list">
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Namibia</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Senegal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html"> South
-                                  Africa</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Tanzania</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Tunisia</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Zambia</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Zanzibar</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Zimbabwe</a></span>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                    </ul>
-                  </li>
-                  <li class="navigation-tabs-pane">
-                    <ul class="navigation-row">
-                      <li class="navigation-col">
-                        <ul class="navigation-list">
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../about.html"> Armenia</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Azerbaijan</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Bali</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Bhutan</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Cambodia</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  China</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  India</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Indonesia</a></span>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                      <li class="navigation-col">
-                        <ul class="navigation-list">
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../about.html"> Japan</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Malaysia</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Nepal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Philippines</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Singapore</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html"> Sri
-                                  Lanka</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Thailand</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Vietnam</a></span>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                    </ul>
-                  </li>
-                  <li class="navigation-tabs-pane">
-                    <ul class="navigation-row">
-                      <li class="navigation-col">
-                        <ul class="navigation-list">
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../about.html"> Australia</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Northern Territory</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html"> South
-                                  Australia</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Tasmania</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html"> Western
-                                  Australia</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html"> Cook
-                                  Islands</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Fiji</a></span>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                      <li class="navigation-col">
-                        <ul class="navigation-list">
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../about.html"> French Polynesia</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html"> New
-                                  Zealand</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html"> Papua
-                                  New Guinea</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Samoa</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html"> Solomon
-                                  Islands</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html"> South
-                                  Pacific</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Vanuatu</a></span>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                    </ul>
-                  </li>
-                  <li class="navigation-tabs-pane">
-                    <ul class="navigation-row">
-                      <li class="navigation-col">
-                        <ul class="navigation-list">
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../about.html"> Austria</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Belgium</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Croatia</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Cyprus</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Denmark</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Finland</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  France</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Germany</a></span>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                      <li class="navigation-col">
-                        <ul class="navigation-list">
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../about.html"> Greece</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Ireland</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Italy</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Portugal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Spain</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Switzerland</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html"> United
-                                  Kingdom</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Ukraine</a></span>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                    </ul>
-                  </li>
-                  <li class="navigation-tabs-pane">
-                    <ul class="navigation-row">
-                      <li class="navigation-col">
-                        <ul class="navigation-list">
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../about.html"> Botswana</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Egypt</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Ethiopia</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Ghana</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Kenya</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Madagascar</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Morocco</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Mozambique</a></span>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                      <li class="navigation-col">
-                        <ul class="navigation-list">
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../about.html"> Namibia</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Senegal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html"> South
-                                  Africa</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Tanzania</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Tunisia</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Zambia</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Zanzibar</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="../search-results--left-sidebar.html">
-                                  Zimbabwe</a></span>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                    </ul>
-                  </li>
-                </ul>
-              </li>
+            <ul class="navigation-dropdown">
+              <?
+              $count = 0;
+              foreach ($place->getKabupatenByProvinsi('51') as $kabupaten) :
+                $count++;
+              ?>
+                <li class="navigation-dropdown-item <?= $count == 1 ? 'active' : null ?>">
+                  <a class="navigation-dropdown-link" href="../search/?kabupaten=<?= $kabupaten['id_kabupaten'] ?>"><?= $kabupaten['nama'] ?></a>
+                </li>
+              <?
+                if ($count == 6) break;
+              endforeach; ?>
+              <? if ($place->getKabupatenByProvinsi('51') > 6) : ?>
+                <li class="navigation-dropdown-item">
+                  <a class="navigation-dropdown-link" href="../search/?provinsi='51'">Jelajahi <?= $place->getProvinsiNameById('51') ?></a>
+                </li>
+              <? endif; ?>
             </ul>
           </li>
           <li class="navigation-item">
             <a class="navigation-link" href="../home-page.html">Kategori</a>
             <ul class="navigation-dropdown">
               <li class="navigation-dropdown-item">
-                <a class="navigation-dropdown-link" href="../search">Hotel</a>
+                <a class="navigation-dropdown-link" href="../search/?kategori=1">Akomodasi</a>
               </li>
               <li class="navigation-dropdown-item">
-                <a class="navigation-dropdown-link" href="../search">Restoran</a>
+                <a class="navigation-dropdown-link" href="../search/?kategori=2">Makanan & Minuman</a>
               </li>
               <li class="navigation-dropdown-item">
-                <a class="navigation-dropdown-link" href="../search">Objek Wisata</a>
+                <a class="navigation-dropdown-link" href="../search/?kategori=3">Objek Wisata</a>
               </li>
             </ul>
           </li>
@@ -694,26 +134,35 @@ if (empty($bisnis)) {
         <ul class="navigation-menu rlr-navigation__menu align-to-right">
           <!-- Add your listing -->
           <li class="d-lg-none d-xxl-block navigation-item">
-            <a class="navigation-link rlr-navigation__link--so" target="_blank" href="../product-form.html">Daftarkan
+            <a class="navigation-link rlr-navigation__link--so" target="_blank" href="../new-listing/">Daftarkan
               Bisnis</a>
           </li>
           <!-- User account dropdown -->
           <li class="navigation-item">
-            <a class="navigation-link" href="#"> Saul Goodman <img class="ui right spaced rlr-avatar rlr-avatar__media--rounded" style="height: 32px; width: 32px;" src="https://static.wikia.nocookie.net/inconsistently-heinous/images/e/e0/Saul_2009.jpg" alt="account avatar" /> </a>
+            <a class="navigation-link" href="#"> <?= isset($_SESSION['user_id']) ? $user['nama'] : 'Guest' ?> <img class="ui right spaced rlr-avatar rlr-avatar__media--rounded" style="height: 32px; width: 32px;" src="https://static.wikia.nocookie.net/inconsistently-heinous/images/e/e0/Saul_2009.jpg" alt="account avatar" /> </a>
+
             <ul class="navigation-dropdown">
-              <li class="navigation-dropdown-item">
-                <a class="navigation-dropdown-link" href="../my-account-pages--dashboard.html">Edit profil</a>
-              </li>
-              <li class="navigation-dropdown-item">
-                <a class="navigation-dropdown-link" href="../wishlist">Wishlist</a>
-              </li>
-              <li class="navigation-dropdown-item">
-                <hr class="dropdown-divider rlr-dropdown__divider" />
-              </li>
-              <li class="navigation-dropdown-item">
-                <a class="navigation-dropdown-link" href="../login">Keluar</a>
-              </li>
+
+              <?php if (isset($_SESSION['user_id'])) : ?>
+                <li class="navigation-dropdown-item">
+                  <a class="navigation-dropdown-link" href="../profile">Akun saya</a>
+                </li>
+                <li class="navigation-dropdown-item">
+                  <a class="navigation-dropdown-link" href="../wishlist">Wishlist</a>
+                </li>
+                <li class="navigation-dropdown-item">
+                  <hr class="dropdown-divider rlr-dropdown__divider" />
+                </li>
+                <li class="navigation-dropdown-item">
+                  <a class="navigation-dropdown-link" href="../logout/">Keluar</a>
+                </li>
+              <? else : ?>
+                <li class="navigation-dropdown-item">
+                  <a class="navigation-dropdown-link" href="../login/">Login</a>
+                </li>
+              <? endif; ?>
             </ul>
+
           </li>
         </ul>
       </div>
@@ -744,9 +193,9 @@ if (empty($bisnis)) {
             <!-- Media main images -->
             <div class="splide__track rlr-media__strack">
               <ul id="image-preview" class="splide__list">
-                <? foreach ($foto_bisnis as $foto) : ?>
+                <? foreach ($photos->read($business->idBisnis) as $photo) : ?>
                   <li class="splide__slide rlr-media__image-view">
-                    <img class="lazyload" data-src="<?= $foto['url'] ?>" alt="media image" />
+                    <img class="lazyload" data-src="../assets/images/listings/<?= $photo['filename'] ?>" alt="media image" />
                   </li>
                 <? endforeach; ?>
               </ul>
@@ -780,9 +229,9 @@ if (empty($bisnis)) {
             <!-- Thumbnails -->
             <div class="splide__track rlr-media__strack">
               <ul id="image-preview-thumb" class="splide__list">
-                <? foreach ($foto_bisnis as $foto) : ?>
+                <? foreach ($photos->read($business->idBisnis) as $photo) : ?>
                   <li class="splide__slide rlr-media__image-view">
-                    <img class="rlr-media__thumb lazyload" data-src="<?= $foto['url'] ?>" alt="media image" />
+                    <img class="rlr-media__thumb lazyload" data-src="../assets/images/listings/<?= $photo['filename'] ?>" alt="media image" />
                   </li>
                 <? endforeach; ?>
               </ul>
@@ -801,26 +250,27 @@ if (empty($bisnis)) {
                 <ol class="breadcrumb rlr-breadcrumb__items">
                   <li class="breadcrumb-item rlr-breadcrumb__item"><a href="/">Home</a></li>
                   <li class="breadcrumb-item rlr-breadcrumb__item"><a href="/">Kategori</a></li>
-                  <li class="breadcrumb-item rlr-breadcrumb__item active" aria-current="page"><?= $kategori['nama'] ?></li>
+                  <li class="breadcrumb-item rlr-breadcrumb__item active" aria-current="page"><?= $business_service->getCategoryByBusinessId($business->idBisnis)['nama'] ?></li>
                 </ol>
               </nav>
-              <h1 class="rlr-section__heading--main rlr-product-detail-header__title"><?= $bisnis['nama'] ?></h1>
+              <h1 class="rlr-section__heading--main rlr-product-detail-header__title"><?= $business->nama ?></h1>
               <div class="rlr-review-stars" itemscope itemtype="https://schema.org/Product">
                 <div class="rlr-review-stars" itemprop="ratingValue" itemscope itemtype="https://schema.org/Product">
                   <?
-                  for ($i = 0; $i < $rating / count($ulasan); $i++) {
+                  $stars = round($reviews->getAverageRatingById($business->idBisnis));
+                  for ($i = 0; $i < $stars; $i++) {
                     echo '<i class="rlr-icon-font flaticon-star-1"></i>';
                   }
-                  if ($rating < 5) {
-                    for ($i = 0; $i < 5 - $rating / count($ulasan); $i++) {
+                  if ($stars < 5) {
+                    for ($i = 0; $i < 5 - $stars; $i++) {
                       echo '<i class="rlr-icon-font flaticon-star"></i>';
                     }
                   }
                   ?>
                 </div>
                 <div class="rlr-review-stars__content">
-                  <span class="rlr-review-stars__count"><?= count($ulasan) ?></span>
-                  <span> Reviews</span>
+                  <span class="rlr-review-stars__count"><?= $reviews->getTotalReviewsById($business->idBisnis) ?></span>
+                  <span> Ulasan</span>
                 </div>
               </div>
             </div>
@@ -858,12 +308,15 @@ if (empty($bisnis)) {
                   </ul>
                   <div class="rlr-copylink">
                     <label class="rlr-copylink__title">Share link</label>
-                    <div class="rlr-copylink__wrapper"><input type="text" autocomplete="off" class="form-control rlr-copylink__input" value="join.untitledui.com/project" /> <i class="rlr-icon-font flaticon-copy"> </i></div>
+                    <div class="rlr-copylink__wrapper">
+                      <input type="text" id="sharable-link" autocomplete="off" class="form-control rlr-copylink__input" value='<?= "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]" ?>' />
+                      <i id="copySharableLink" class="rlr-icon-font flaticon-copy"> </i>
+                    </div>
                   </div>
                 </div>
               </div>
               <div class="rlr-product-detail-header__button-wrapper">
-                <button type="button" class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button rlr-js-action-wishlist" aria-label="Save to Wishlist">
+                <button type="button" id="wishlistBtn" class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button rlr-js-action-wishlist" aria-label="Save to Wishlist">
                   <i class="rlr-icon-font flaticon-heart-1"> </i>
                 </button>
                 <span class="rlr-product-detail-header__helptext rlr-js-helptext"></span>
@@ -900,7 +353,7 @@ if (empty($bisnis)) {
               <div class="rlr-overview-detail">
                 <div class="rlr-readmore-desc rlr-overview-detail__description">
                   <p class="rlr-readmore-desc__content rlr-js-desc">
-                    <?= $bisnis['deskripsi'] ?>
+                    <?= $business->deskripsi ?>
                   </p>
                   <span class="rlr-readmore-desc__readmore rlr-js-readmore">Selengkapnya...</span>
                 </div>
@@ -921,27 +374,24 @@ if (empty($bisnis)) {
             <div class="rlr-secondary-menu-desc__details">
               <div class="rlr-readmore-desc">
                 <p class="rlr-readmore-desc__content rlr-js-desc">
-                  Dolor elit voluptate cupidatat in eiusmod. Eiusmod ex eu incididunt etile pariatur dolor mollit
-                  reprehenderit magna tempor ex minim velit sunt do. Elit dolore sunt cupidatat minim nisi nulla fugiat
-                  sit dolor adipisicing excepteur eiusmod. Mollit reprehenderit
-                  magna tempor ex.
+                  Daftar layanan berikut diperoleh dari pengelola listing.
                 </p>
                 <span class="rlr-readmore-desc__readmore rlr-js-readmore">Selengkapnya...</span>
               </div>
               <ul class="list-group list-group-flush rlr-secondary-menu-desc__list-group">
                 <!-- Inclusions -->
-                <? foreach ($layanan_tersedia as $tersedia) : ?>
+                <? foreach ($services->readAvailable($business->idBisnis) as $available) : ?>
                   <li class="rlr-icon-text rlr-secondary-menu-desc__list">
                     <i class="rlr-icon-font flaticon-check-rounded"></i>
-                    <span class="rlr-icon-text__text"><?= $tersedia['layanan'] ?></span>
+                    <span class="rlr-icon-text__text"><?= $available['layanan'] ?></span>
                   </li>
                 <? endforeach; ?>
 
                 <!-- Exclusion -->
-                <? foreach ($layanan_tidak_tersedia as $tidak_tersedia) : ?>
+                <? foreach ($services->readUnavailable($business->idBisnis) as $reviewnavailable) : ?>
                   <li class="rlr-icon-text rlr-secondary-menu-desc__list">
                     <i class="rlr-icon-font flaticon-cross-rounded"></i>
-                    <span class="rlr-icon-text__text"><?= $tidak_tersedia['layanan'] ?></span>
+                    <span class="rlr-icon-text__text"><?= $reviewnavailable['layanan'] ?></span>
                   </li>
                 <? endforeach; ?>
               </ul>
@@ -960,7 +410,7 @@ if (empty($bisnis)) {
               <div class="d-lg-flex justify-content-between py-4">
                 <div class="d-flex justify-content-start gap-2">
                   <i class="rlr-icon-font flaticon-star-1 m-0" style="font-size: 1.5rem;"> </i>
-                  <h1 class="rlr-section__heading--main rlr-product-detail-header__title m-0" style="font-size: 1.5rem;"><?= $rating ?> · <?= count($ulasan) ?> ulasan</h1>
+                  <h1 class="rlr-section__heading--main rlr-product-detail-header__title m-0" style="font-size: 1.5rem;"><?= round($reviews->getAverageRatingById($business->idBisnis), 1) ?> · <?= $reviews->getTotalReviewsById($business->idBisnis) ?> ulasan</h1>
                 </div>
                 <button type="button" class="btn btn-add-review rlr-button rlr-button--gray-00 text-black px-4 py-2" style="border: 0.1px solid lightgray; border-radius: 8px;" id="addReviewModalBtn">Tambah
                   ulasan</button>
@@ -968,10 +418,9 @@ if (empty($bisnis)) {
               <!-- Review -->
 
               <?
-              $i = 0;
-              foreach ($ulasan as $u) :
-                $stmt = $conn->prepare('SELECT * FROM pengguna WHERE id_pengguna = ?');
-                $stmt->execute([$u['id_pengguna']]);
+              foreach ($reviews->read($business->idBisnis, 0, 3, null, null, 'latest') as $review) :
+                $stmt = $conn->prepare('SELECT * FROM pengguna WHERE id_pengguna = ?'); // todo: buat class pengguna
+                $stmt->execute([$review['id_pengguna']]);
                 $pengulas = $stmt->fetch();
               ?>
 
@@ -983,16 +432,16 @@ if (empty($bisnis)) {
 
                       <div class="d-flex flex-column ml-2">
                         <span class="rlr-avatar__name" style="font-weight: 500;" itemprop="name"><?= $pengulas['nama'] ?></span>
-                        <span class="rlr-avatar__name" style="font-weight: 300; font-size: 90%" itemprop="date"><?= $u['waktu'] ?></span>
+                        <span class="rlr-avatar__name" style="font-weight: 300; font-size: 90%" itemprop="date"><?= $review['waktu'] ?></span>
                       </div>
                     </div>
                     <div class="rlr-review-stars" itemprop="ratingValue" itemscope itemtype="https://schema.org/Product">
                       <?
-                      for ($i = 0; $i < $u['rating']; $i++) {
+                      for ($i = 0; $i < $review['rating']; $i++) {
                         echo '<i class="rlr-icon-font flaticon-star-1"></i>';
                       }
-                      if ($u['rating'] < 5) {
-                        for ($i = 0; $i < 5 - $u['rating']; $i++) {
+                      if ($review['rating'] < 5) {
+                        for ($i = 0; $i < 5 - $review['rating']; $i++) {
                           echo '<i class="rlr-icon-font flaticon-star"></i>';
                         }
                       }
@@ -1001,8 +450,8 @@ if (empty($bisnis)) {
                   </div>
                   <div class="rlr-review-card__details">
                     <div class="rlr-review-card__title gap-4">
-                      <h3 class="rlr-review-card__title-review"><?= $u['judul'] ?></h3>
-                      <span class="rlr-svg-icon button-report-review">
+                      <h3 class="rlr-review-card__title-review"><?= $review['judul'] ?></h3>
+                      <span class="rlr-svg-icon button-report-review" data-id-ulasan="<?= $review['id_ulasan'] ?>">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#000000">
                           <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                           <g id="SVGRepo_iconCarrier">
@@ -1013,14 +462,33 @@ if (empty($bisnis)) {
                     </div>
                     <div class="rlr-review-card__comments" itemprop="review description">
                       <div class="rlr-readmore-desc">
-                        <p class="rlr-readmore-desc__content rlr-js-desc"><?= $u['komentar'] ?></p>
+                        <p class="rlr-readmore-desc__content rlr-js-desc"><?= $review['komentar'] ?></p>
                         <span class="rlr-readmore-desc__readmore rlr-js-readmore">Selengkapnya...</span>
+                        <? if ($reviewphotos->read($review['id_ulasan'])) : ?>
+                          <div class="rlr-itinerary__media-group">
+                            <?
+                            $i = 1;
+                            foreach ($reviewphotos->read($review['id_ulasan']) as $photo) : ?>
+                              <div class="rlr-itinerary__media mb-0">
+                                <a data-fslightbox="review-images-main<?= $photo['id_foto_ulasan'] ?>" href="../assets/images/reviews/<?= $photo['filename'] ?>">
+                                  <figure class="rlr-lightbox--gallery__figure">
+                                    <img style="object-fit: cover;" class="rlr-lightbox--gallery__img" src="../assets/images/reviews/<?= $photo['filename'] ?>" />
+                                    <figcaption class="rlr-lightbox--gallery__figcaption">
+                                      <span><?= $i ?></span>
+                                    </figcaption>
+                                  </figure>
+                                </a>
+                              </div>
+                            <?
+                              $i++;
+                            endforeach; ?>
+                          </div>
+                        <? endif; ?>
                       </div>
                     </div>
                   </div>
                 </article>
               <?
-                if (++$i == 3) break;
               endforeach;
               ?>
               <!-- Pagination -->
@@ -1045,15 +513,14 @@ if (empty($bisnis)) {
               <div class="accordion rlr-accordion">
 
                 <?
-                $i = 0;
-                foreach ($faqs as $faq) : ?>
+                foreach ($faqs->read($business->idBisnis) as $faq) : ?>
                   <div class="accordion-item rlr-accordion__item" style="border-radius: 0;">
-                    <div class="accordion-header rlr-accordion__header" id="rlr-faq-collapse-header<?= $i ?>">
-                      <button class="accordion-button rlr-accordion__button" type="button" data-bs-toggle="collapse" data-bs-target="#rlr-faq-collapse<?= $i ?>" aria-expanded="true" aria-controls="rlr-faq-collapse<?= $i ?>">
+                    <div class="accordion-header rlr-accordion__header" id="rlr-faq-collapse-header<?= $faq['id_faq_bisnis'] ?>">
+                      <button class="accordion-button rlr-accordion__button" type="button" data-bs-toggle="collapse" data-bs-target="#rlr-faq-collapse<?= $faq['id_faq_bisnis'] ?>" aria-expanded="true" aria-controls="rlr-faq-collapse<?= $faq['id_faq_bisnis'] ?>">
                         <span class="rlr-accordion__badge">?</span> <?= $faq['pertanyaan'] ?>
                       </button>
                     </div>
-                    <div id="rlr-faq-collapse<?= $i ?>" class="accordion-collapse collapse show" aria-labelledby="rlr-faq-collapse-header<?= $i ?>">
+                    <div id="rlr-faq-collapse<?= $faq['id_faq_bisnis'] ?>" class="accordion-collapse collapse show" aria-labelledby="rlr-faq-collapse-header<?= $faq['id_faq_bisnis'] ?>">
                       <div class="accordion-body rlr-accordion__body">
                         <div class="rlr-readmore-desc">
                           <p class="rlr-readmore-desc__content rlr-js-desc">
@@ -1065,7 +532,6 @@ if (empty($bisnis)) {
                     </div>
                   </div>
                 <?
-                  $i++;
                 endforeach; ?>
 
               </div>
@@ -1080,21 +546,29 @@ if (empty($bisnis)) {
             </fieldset>
             <div class="rlr-lightbox--gallery">
               <a data-fslightbox="custom-google-maps" data-class="d-block" href="#google-maps">
-                <figure class="rlr-lightbox--gallery__figure">
-                  <img class="rlr-lightbox--gallery__img" style="width: 100%;" src="../assets/images/lightbox-map-thumb.jpg" alt="Itinerary Map" />
-                  <figcaption class="rlr-lightbox--gallery__figcaption">
-                    <span><i class="rlr-icon-font flaticon-map-1"> </i></span>
-                  </figcaption>
+                <figure class="rlr-lightbox--gallery__figure" style="margin-bottom: var(--spacing-7);">
+                  <div class="rlr-fieldrow__map" id="map"></div>
                 </figure>
               </a>
-              <iframe src="https://www.google.com/maps/d/embed?mid&#x3D;1uTVu66YGp2Jy_bjtGs9SOZ16_ZQIwLjr&amp;ehbc&#x3D;2E312F" id="google-maps" allow="autoplay; fullscreen" width="1920" height="1080"> </iframe>
+              <iframe src="https://maps.google.com/?q=<?= $business->lat ?>,<?= $business->lng ?>&output=embed" id="google-maps" allow="autoplay; fullscreen" width="1920" height="1080"> </iframe>
             </div>
             <fieldset class="rlr-booking-card__results rlr-booking-card__results--found mt-0">
               <ul class="rlr-booking-card__result-list">
                 <li class="rlr-icon-text">
                   <i class="rlr-icon-font flaticon-map-marker"> </i>
                   <div class="rlr-icon-text__text-wrapper">
-                    <span class=""><?= $bisnis['alamat'] ?></span>
+                    <span class="description-url" onclick="window.open('https://maps.google.com/?q=<?= $business->lat ?>,<?= $business->lng ?>', '_blank')">
+                      <?= $business->alamat ?>
+                      <span class="rlr-svg-icon">
+                        <svg width="16" height="16" viewBox="-1.44 -1.44 26.88 26.88" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#000000" stroke-width="1.104" stroke-linecap="round" stroke-linejoin="miter">
+                          <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                          <g id="SVGRepo_iconCarrier">
+                            <polyline points="17 14 17 7 10 7"></polyline>
+                            <line x1="7" y1="17" x2="17" y2="7"></line>
+                          </g>
+                        </svg>
+                      </span>
+                    </span>
                   </div>
                 </li>
               </ul>
@@ -1102,7 +576,7 @@ if (empty($bisnis)) {
                 <li class="rlr-icon-text">
                   <i class="rlr-icon-font flaticon-globe"> </i>
                   <div class="rlr-icon-text__text-wrapper">
-                    <span class="description-url" onclick="window.location.href='<?= $bisnis['website'] ?>'">
+                    <span class="description-url" onclick="window.location.href='<?= $business->website ?>'">
                       Website
                       <span class="rlr-svg-icon">
                         <svg width="16" height="16" viewBox="-1.44 -1.44 26.88 26.88" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#000000" stroke-width="1.104" stroke-linecap="round" stroke-linejoin="miter">
@@ -1121,7 +595,7 @@ if (empty($bisnis)) {
                 <li class="rlr-icon-text">
                   <i class="rlr-icon-font flaticon-email"> </i>
                   <div class="rlr-icon-text__text-wrapper">
-                    <span class="description-url" onclick="window.location.href='mailto:<?= $bisnis['email'] ?>'">
+                    <span class="description-url" onclick="window.location.href='mailto:<?= $business->email ?>'">
                       Email
                       <span class="rlr-svg-icon">
                         <svg width="16" height="16" viewBox="-1.44 -1.44 26.88 26.88" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#000000" stroke-width="1.104" stroke-linecap="round" stroke-linejoin="miter">
@@ -1140,7 +614,7 @@ if (empty($bisnis)) {
                 <li class="rlr-icon-text">
                   <i class="rlr-icon-font flaticon-telephone"> </i>
                   <div class="rlr-icon-text__text-wrapper">
-                    <span onclick="window.location.href='phone:<?= $bisnis['telepon'] ?>'"><?= $bisnis['telepon'] ?></span>
+                    <span onclick="window.location.href='phone:<?= $business->telepon ?>'"><?= $business->telepon ?></span>
                   </div>
                 </li>
               </ul>
@@ -1154,216 +628,110 @@ if (empty($bisnis)) {
         <div class="rlr-section-header">
           <!-- Section heading -->
           <div class="rlr-section__title">
-            <h2 class="rlr-section__title--main">Lainnya di <?= $kabupaten['nama'] ?></h2>
+            <h2 class="rlr-section__title--main">Lainnya di <?= $place->getKabupatenNameById($place->getPlaceById($business->idDesa)['id_kabupaten']) ?></h2>
             <span class="rlr-section__title--sub">Akomodasi, objek wisata, serta tempat makan dan minum lainnya yang dapat Anda
               kunjungi</span>
           </div>
           <div class="button-row">
-            <a href="../search-results--left-sidebar.html" class="btn rlr-button rlr-button--large rlr-button--rounded rlr-button--brand"> Jelajahi </a>
+            <a href="../search/?kabupaten=<?= $place->getPlaceById($business->idDesa)['id_kabupaten'] ?>" class="btn rlr-button rlr-button--large rlr-button--rounded rlr-button--brand"> Jelajahi </a>
           </div>
         </div>
         <div class="row rlr-featured__cards">
-          <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-offset="250" data-aos-duration="700">
-            <!-- Featured product card -->
-            <article class="rlr-product-card rlr-product-card--v3" itemscope itemtype="https://schema.org/Product">
-              <!-- Product card image -->
-              <figure class="rlr-product-card__image-wrapper">
-                <span class="rlr-badge rlr-badge-- rlr-badge--accent-blue rlr-product-card__badge"> Hotel </span>
-                <div class="rlr-product-detail-header__button-wrapper">
-                  <button type="button" class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button--light rlr-wishlist-button rlr-js-action-wishlist" aria-label="Save to Wishlist">
-                    <i class="rlr-icon-font flaticon-heart-1"> </i>
-                  </button>
-                  <span class="rlr-product-detail-header__helptext rlr-js-helptext"></span>
-                </div>
-                <a href="../listing/">
-                  <div class="swiper rlr-js-product-multi-image-swiper">
-                    <div class="swiper-wrapper">
-                      <div class="swiper-slide">
-                        <img itemprop="image" data-sizes="auto" data-src="../assets/images/product-images/small/01.jpg" data-srcset="../assets/images/product-images/small/01.jpg" class="lazyload" alt="product-image" />
-                      </div>
-                      <div class="swiper-slide">
-                        <img itemprop="image" data-sizes="auto" data-src="../assets/images/product-images/small/02.jpg" data-srcset="../assets/images/product-images/small/02.jpg" class="lazyload" alt="product-image" />
-                      </div>
-                      <div class="swiper-slide">
-                        <img itemprop="image" data-sizes="auto" data-src="../assets/images/product-images/small/03.jpg" data-srcset="../assets/images/product-images/small/03.jpg" class="lazyload" alt="product-image" />
-                      </div>
-                    </div>
-                    <button type="button" class="btn rlr-button splide__arrow splide__arrow--prev" aria-label="prev button">
-                      <i class="rlr-icon-font flaticon-left-chevron"> </i>
+
+          <?
+          $count = 0;
+          foreach ($place->getNearestBusinessesByLocation($place->getPlaceById($business->idDesa)['id_kabupaten'], 'kabupaten') as $neighbour) :
+            $count++;
+            if ($neighbour['id_bisnis'] == $business->idBisnis) {
+              continue;
+            }
+            $category = $business_service->getCategoryByBusinessId($neighbour['id_bisnis']);
+
+            switch ($business_service->getCategoryByBusinessId($neighbour['id_bisnis'])['id_kategori']) {
+              case 1:
+                $categoryBadgeAccent = 'blue';
+                break;
+              case 2:
+                $categoryBadgeAccent = 'red';
+                break;
+              case 3:
+                $categoryBadgeAccent = 'black';
+                break;
+            }
+          ?>
+
+            <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-offset="250" data-aos-duration="700">
+              <article class="rlr-product-card rlr-product-card--v3" itemscope itemtype="https://schema.org/Product">
+                <figure class="rlr-product-card__image-wrapper">
+                  <span class="rlr-badge rlr-badge-- rlr-badge--accent-<?= $categoryBadgeAccent ?> rlr-product-card__badge"> <?= $category['nama'] ?> </span>
+                  <div class="rlr-product-detail-header__button-wrapper">
+                    <button type="button" class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button--light rlr-wishlist-button rlr-js-action-wishlist" aria-label="Save to Wishlist">
+                      <i class="rlr-icon-font flaticon-heart-1"> </i>
                     </button>
-                    <button type="button" class="btn rlr-button splide__arrow splide__arrow--next" aria-label="next button">
-                      <i class="rlr-icon-font flaticon-chevron"> </i>
-                    </button>
+                    <span class="rlr-product-detail-header__helptext rlr-js-helptext"></span>
                   </div>
-                </a>
-              </figure>
-              <div class="rlr-product-card__detail-wrapper rlr-js-detail-wrapper">
-                <!-- Product card header -->
-                <header class="rlr-product-card__header">
-                  <div>
-                    <a href="../listing/" class="rlr-product-card__anchor-title">
-                      <h2 class="rlr-product-card__title" itemprop="name">OYO 666 Jimbaran</h2>
-                    </a>
+                  <a href="../listing/?id=<?= $neighbour['id_bisnis'] ?>">
+                    <div class="swiper rlr-js-product-multi-image-swiper">
+                      <div class="swiper-wrapper">
+                        <? foreach ($photos->read($neighbour['id_bisnis']) as $photo) : ?>
+                          <div class="swiper-slide">
+                            <img itemprop="image" data-sizes="auto" data-src="<?= $photo['url'] ?>" data-srcset="<?= $photo['url'] ?>" class="lazyload" alt="product-image" />
+                          </div>
+                        <? endforeach; ?>
+                      </div>
+                      <button type="button" class="btn rlr-button splide__arrow splide__arrow--prev" aria-label="prev button">
+                        <i class="rlr-icon-font flaticon-left-chevron"> </i>
+                      </button>
+                      <button type="button" class="btn rlr-button splide__arrow splide__arrow--next" aria-label="next button">
+                        <i class="rlr-icon-font flaticon-chevron"> </i>
+                      </button>
+                    </div>
+                  </a>
+                </figure>
+                <div class="rlr-product-card__detail-wrapper rlr-js-detail-wrapper">
+                  <!-- Product card header -->
+                  <header class="rlr-product-card__header">
                     <div>
-                      <a href="../listing/" class="rlr-product-card__anchor-cat">
-                        <span class="rlr-product-card__sub-title">Jl. Raya Jimbaran No. 15X</span>
+                      <a href="../listing/?id=<?= $neighbour['id_bisnis'] ?>" class="rlr-product-card__anchor-title">
+                        <h2 class="rlr-product-card__title" itemprop="name"><?= $business_service->getBusinessById($neighbour['id_bisnis'])->nama ?></h2>
                       </a>
+                      <div>
+                        <a href="../listing/?id=<?= $neighbour['id_bisnis'] ?>" class="rlr-product-card__anchor-cat">
+                          <span class="rlr-product-card__sub-title"><?= $business_service->getBusinessById($neighbour['id_bisnis'])->alamat ?></span>
+                        </a>
+                      </div>
                     </div>
-                  </div>
-                </header>
-                <!-- Product card body -->
-                <div class="rlr-product-card__details">
-                  <div class="rlr-product-card__prices" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
-                    <span class="rlr-product-card__from">Open today </span>
-                    <div class="rlr-icon-text rlr-product-card__icon-text"><span class="">5AM - 8PM</span></div>
-                  </div>
-                  <div class="rlr-product-card__ratings" itemprop="aggregateRating" itemscope itemtype="https://schema.org/AggregateRating">
-                    <div class="rlr-review-stars" itemprop="ratingValue" itemscope itemtype="https://schema.org/Product">
-                      <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i>
+                  </header>
+                  <!-- Product card body -->
+                  <div class="rlr-product-card__details">
+                    <div class="rlr-product-card__prices" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+                      <span class="rlr-product-card__from"><?= $place->getKecamatanNameById($neighbour['id_kecamatan']) ?></span>
+                      <div class="rlr-icon-text rlr-product-card__icon-text"><span class=""><?= $place->getKabupatenNameById($neighbour['id_kabupaten']) ?></span></div>
                     </div>
-                    <span class="rlr-product-card__rating-text" itemprop="reviewCount">4.7 (577)</span>
+                    <div class="rlr-product-card__ratings" itemprop="aggregateRating" itemscope itemtype="https://schema.org/AggregateRating">
+                      <div class="rlr-review-stars" itemprop="ratingValue" itemscope itemtype="https://schema.org/Product">
+                        <?
+                        $stars = round($reviews->getAverageRatingById($neighbour['id_bisnis']));
+                        for ($i = 0; $i < $stars; $i++) {
+                          echo '<i class="rlr-icon-font flaticon-star-1"></i>';
+                        }
+                        if ($stars < 5) {
+                          for ($i = 0; $i < 5 - $stars; $i++) {
+                            echo '<i class="rlr-icon-font flaticon-star"></i>';
+                          }
+                        }
+                        ?>
+                      </div>
+                      <span class="rlr-product-card__rating-text" itemprop="reviewCount"><?= round($reviews->getAverageRatingById($neighbour['id_bisnis']), 1) ?> (<?= $reviews->getTotalReviewsById($neighbour['id_bisnis'])  ?>)</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </article>
-          </div>
-          <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-offset="250" data-aos-duration="700">
-            <!-- Featured product card -->
-            <article class="rlr-product-card rlr-product-card--v3" itemscope itemtype="https://schema.org/Product">
-              <!-- Product card image -->
-              <figure class="rlr-product-card__image-wrapper">
-                <span class="rlr-badge rlr-badge-- rlr-badge--accent-red rlr-product-card__badge"> Restoran </span>
-                <div class="rlr-product-detail-header__button-wrapper">
-                  <button type="button" class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button--light rlr-wishlist-button rlr-js-action-wishlist" aria-label="Save to Wishlist">
-                    <i class="rlr-icon-font flaticon-heart-1"> </i>
-                  </button>
-                  <span class="rlr-product-detail-header__helptext rlr-js-helptext"></span>
-                </div>
-                <a href="../listing/">
-                  <div class="swiper rlr-js-product-multi-image-swiper">
-                    <div class="swiper-wrapper">
-                      <div class="swiper-slide">
-                        <img itemprop="image" data-sizes="auto" data-src="../assets/images/product-images/small/01.jpg" data-srcset="../assets/images/product-images/small/01.jpg" class="lazyload" alt="product-image" />
-                      </div>
-                      <div class="swiper-slide">
-                        <img itemprop="image" data-sizes="auto" data-src="../assets/images/product-images/small/02.jpg" data-srcset="../assets/images/product-images/small/02.jpg" class="lazyload" alt="product-image" />
-                      </div>
-                      <div class="swiper-slide">
-                        <img itemprop="image" data-sizes="auto" data-src="../assets/images/product-images/small/03.jpg" data-srcset="../assets/images/product-images/small/03.jpg" class="lazyload" alt="product-image" />
-                      </div>
-                    </div>
-                    <button type="button" class="btn rlr-button splide__arrow splide__arrow--prev" aria-label="prev button">
-                      <i class="rlr-icon-font flaticon-left-chevron"> </i>
-                    </button>
-                    <button type="button" class="btn rlr-button splide__arrow splide__arrow--next" aria-label="next button">
-                      <i class="rlr-icon-font flaticon-chevron"> </i>
-                    </button>
-                  </div>
-                </a>
-              </figure>
-              <div class="rlr-product-card__detail-wrapper rlr-js-detail-wrapper">
-                <!-- Product card header -->
-                <header class="rlr-product-card__header">
-                  <div>
-                    <a href="../listing/" class="rlr-product-card__anchor-title">
-                      <h2 class="rlr-product-card__title" itemprop="name">OYO 666 Jimbaran</h2>
-                    </a>
-                    <div>
-                      <a href="../listing/" class="rlr-product-card__anchor-cat">
-                        <span class="rlr-product-card__sub-title">Hotel</span>
-                      </a>
-                      <span class="rlr-product-card__sub-title">|</span>
-                      <a href="../listing/" class="rlr-product-card__anchor-sub-cat">
-                        <span class="rlr-product-card__sub-title">Kuta</span>
-                      </a>
-                    </div>
-                  </div>
-                </header>
-                <!-- Product card body -->
-                <div class="rlr-product-card__details">
-                  <div class="rlr-product-card__prices" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
-                    <span class="rlr-product-card__from">Open today </span>
-                    <div class="rlr-icon-text rlr-product-card__icon-text"><span class="">5AM - 8PM</span></div>
-                  </div>
-                  <div class="rlr-product-card__ratings" itemprop="aggregateRating" itemscope itemtype="https://schema.org/AggregateRating">
-                    <div class="rlr-review-stars" itemprop="ratingValue" itemscope itemtype="https://schema.org/Product">
-                      <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i>
-                    </div>
-                    <span class="rlr-product-card__rating-text" itemprop="reviewCount">4.7 (577)</span>
-                  </div>
-                </div>
-              </div>
-            </article>
-          </div>
-          <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-offset="250" data-aos-duration="700">
-            <!-- Featured product card -->
-            <article class="rlr-product-card rlr-product-card--v3" itemscope itemtype="https://schema.org/Product">
-              <!-- Product card image -->
-              <figure class="rlr-product-card__image-wrapper">
-                <span class="rlr-badge rlr-badge-- rlr-badge--accent-black rlr-product-card__badge"> Objek Wisata
-                </span>
-                <div class="rlr-product-detail-header__button-wrapper">
-                  <button type="button" class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button--light rlr-wishlist-button rlr-js-action-wishlist" aria-label="Save to Wishlist">
-                    <i class="rlr-icon-font flaticon-heart-1"> </i>
-                  </button>
-                  <span class="rlr-product-detail-header__helptext rlr-js-helptext"></span>
-                </div>
-                <a href="../listing/">
-                  <div class="swiper rlr-js-product-multi-image-swiper">
-                    <div class="swiper-wrapper">
-                      <div class="swiper-slide">
-                        <img itemprop="image" data-sizes="auto" data-src="../assets/images/product-images/small/01.jpg" data-srcset="../assets/images/product-images/small/01.jpg" class="lazyload" alt="product-image" />
-                      </div>
-                      <div class="swiper-slide">
-                        <img itemprop="image" data-sizes="auto" data-src="../assets/images/product-images/small/02.jpg" data-srcset="../assets/images/product-images/small/02.jpg" class="lazyload" alt="product-image" />
-                      </div>
-                      <div class="swiper-slide">
-                        <img itemprop="image" data-sizes="auto" data-src="../assets/images/product-images/small/03.jpg" data-srcset="../assets/images/product-images/small/03.jpg" class="lazyload" alt="product-image" />
-                      </div>
-                    </div>
-                    <button type="button" class="btn rlr-button splide__arrow splide__arrow--prev" aria-label="prev button">
-                      <i class="rlr-icon-font flaticon-left-chevron"> </i>
-                    </button>
-                    <button type="button" class="btn rlr-button splide__arrow splide__arrow--next" aria-label="next button">
-                      <i class="rlr-icon-font flaticon-chevron"> </i>
-                    </button>
-                  </div>
-                </a>
-              </figure>
-              <div class="rlr-product-card__detail-wrapper rlr-js-detail-wrapper">
-                <!-- Product card header -->
-                <header class="rlr-product-card__header">
-                  <div>
-                    <a href="../listing/" class="rlr-product-card__anchor-title">
-                      <h2 class="rlr-product-card__title" itemprop="name">OYO 666 Jimbaran</h2>
-                    </a>
-                    <div>
-                      <a href="../listing/" class="rlr-product-card__anchor-cat">
-                        <span class="rlr-product-card__sub-title">Hotel</span>
-                      </a>
-                      <span class="rlr-product-card__sub-title">|</span>
-                      <a href="../listing/" class="rlr-product-card__anchor-sub-cat">
-                        <span class="rlr-product-card__sub-title">Kuta</span>
-                      </a>
-                    </div>
-                  </div>
-                </header>
-                <!-- Product card body -->
-                <div class="rlr-product-card__details">
-                  <div class="rlr-product-card__prices" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
-                    <span class="rlr-product-card__from">Open today </span>
-                    <div class="rlr-icon-text rlr-product-card__icon-text"><span class="">5AM - 8PM</span></div>
-                  </div>
-                  <div class="rlr-product-card__ratings" itemprop="aggregateRating" itemscope itemtype="https://schema.org/AggregateRating">
-                    <div class="rlr-review-stars" itemprop="ratingValue" itemscope itemtype="https://schema.org/Product">
-                      <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i>
-                    </div>
-                    <span class="rlr-product-card__rating-text" itemprop="reviewCount">4.7 (577)</span>
-                  </div>
-                </div>
-              </div>
-            </article>
-          </div>
+              </article>
+            </div>
+          <?
+            if ($count == 3) break;
+          endforeach; ?>
+
         </div>
       </section>
       <!-- Add Review Modal -->
@@ -1371,95 +739,83 @@ if (empty($bisnis)) {
         <!-- Modal content -->
         <div class="modal-content">
           <div id="rlr-review-from" class="container-xxxl">
-            <section class="rlr-section rlr-section__content--md-top row justify-content-center my-0">
-              <div class="modal-header">
-                <div class="rlr-section__heading py-4 px-3">
-                  <label class="rlr-form-label rlr-form-label--dark m-0" for="rlr_review_form_title"> Tulis Ulasan
-                  </label>
-                </div>
-              </div>
-              <div class="col-xl-12">
-                <fieldset class="rlr-product-form--show px-3">
-                  <legend class="rlr-review-form__hidden-legend">Tulis ulasan</legend>
-                  <!-- Section heading -->
-                  <div class="rlr-fieldrow">
-                    <div class="rlr-fieldrow_item my-2">
-                      <div class='rating-stars text-center'>
-                        <ul id='stars'>
-                          <li class='star' title='Poor' data-value='1'>
-                            <i class='rlr-icon-font flaticon-star-1'></i>
-                          </li>
-                          <li class='star' title='Fair' data-value='2'>
-                            <i class='rlr-icon-font flaticon-star-1'></i>
-                          </li>
-                          <li class='star' title='Good' data-value='3'>
-                            <i class='rlr-icon-font flaticon-star-1'></i>
-                          </li>
-                          <li class='star' title='Excellent' data-value='4'>
-                            <i class='rlr-icon-font flaticon-star-1'></i>
-                          </li>
-                          <li class='star' title='WOW!!!' data-value='5'>
-                            <i class='rlr-icon-font flaticon-star-1'></i>
-                          </li>
-                        </ul>
-                      </div>
-
-                    </div>
-                    <div class="rlr-fieldrow__form-element">
-                      <div class="rlr-fieldrow__item mt-2 mb-4">
-                        <label class="rlr-form-label rlr-form-label--dark mb-3" for="rlr_review_form_title"> Judul
-                        </label> <input type="text" autocomplete="off" maxlength="70" id="rlr_review_form_title" class="form-control" placeholder="Hotel mewah di Jimbaran">
-                      </div>
-                      <div class="rlr-fieldrow__item mt-2 mb-4">
-                        <label class="rlr-form-label rlr-form-label--dark mb-3" for="rlr_review_form_desc"> Ceritakan
-                          pengalaman Anda </label>
-                        <textarea id="rlr_review_form_desc" class="form-control form-control--text-area" placeholder="Provide more information for travelers to find your starting point easily, for example, opposite to the xyz landmark building" rows="12"></textarea>
-                      </div>
-                    </div>
-                    <div class="rlr-fieldrow__item mt-2 mb-4">
-                      <label class="rlr-form-label rlr-form-label--dark mb-4" for="rlr_review_form_title"> Tambahkan
-                        foto dari pengalaman Anda. </label>
-                      <div class="rlr-drop-region js-rlr-drop-region">
-                        <div class="rlr-drop-region__add-section">
-                          <input required="" id="rlr_review_form_uploader" class="rlr-drop-region__image-input js-rlr-drop-input" type="file" accept="image/*" multiple="">
-                          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M24 1.928c12.144 0 22.072 9.928 22.072 22.072 0 12.144-9.928 22.072-22.072 22.072-12.144 0-22.072-9.928-22.072-22.072C1.928 11.856 11.856 1.928 24 1.928zM24 0A23.94 23.94 0 0 0 0 24c0 13.302 10.794 24 24 24 13.204 0 24-10.698 24-24A23.94 23.94 0 0 0 24 0z" fill="#99A3AD"></path>
-                            <path d="M22.844 11.374h1.928v25.06h-1.928v-25.06z" fill="#99A3AD"></path>
-                            <path d="M11.18 23.132h24.868v1.928H11.18v-1.928z" fill="#99A3AD"></path>
-                          </svg>
-                          <div class="type-lead rlr-drop-region__add-section__text">Tambah Foto</div>
-                        </div>
-                      </div>
-                      <div class="splide rlr-view-region splide--slide splide--ltr splide--draggable is-active is-initialized" id="rlr_js_splide_photouploader" role="region" aria-roledescription="carousel">
-                        <div class="splide__arrows splide__arrows--ltr"><button class="splide__arrow splide__arrow--prev" type="button" disabled="" aria-label="Previous slide" aria-controls="rlr_js_splide_photouploader-track"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40" focusable="false">
-                              <path d="m15.5 0.932-4.3 4.38 14.5 14.6-14.5 14.5 4.3 4.4 14.6-14.6 4.4-4.3-4.4-4.4-14.6-14.6z">
-                              </path>
-                            </svg></button><button class="splide__arrow splide__arrow--next" type="button" disabled="" aria-label="Next slide" aria-controls="rlr_js_splide_photouploader-track"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40" focusable="false">
-                              <path d="m15.5 0.932-4.3 4.38 14.5 14.6-14.5 14.5 4.3 4.4 14.6-14.6 4.4-4.3-4.4-4.4-14.6-14.6z">
-                              </path>
-                            </svg></button></div>
-                        <div class="splide__track rlr-view-region__strack splide__track--slide splide__track--ltr splide__track--draggable" id="rlr_js_splide_photouploader-track" style="padding-left: 0px; padding-right: 0px;" aria-live="polite" aria-relevant="additions">
-                          <ul id="image-preview" class="splide__list" role="presentation" style="transform: translateX(0px);"></ul>
-                        </div>
-                      </div>
-                      <div class="rlr-view-input rlr-view-input--js-hide js-rlr-view-input">
-                        <span class="rlr-view-input__submit js-label-submit">
-                          <svg width="14" height="12" viewBox="0 0 14 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M5.394 11.123a.698.698 0 0 1-.99 0L.45 7.17a1.05 1.05 0 0 1 0-1.485l.495-.495a1.05 1.05 0 0 1 1.486 0l2.468 2.468 6.67-6.67a1.05 1.05 0 0 1 1.485 0l.495.496c.41.41.41 1.075 0 1.485l-8.155 8.155z" fill="var(--white)"></path>
-                          </svg>
-                        </span>
-                      </div>
-                    </div>
+            <form action="addReview/" method="POST" enctype="multipart/form-data">
+              <section class="rlr-section rlr-section__content--md-top row justify-content-center my-0">
+                <div class="modal-header">
+                  <div class="rlr-section__heading py-4 px-3">
+                    <label class="rlr-form-label rlr-form-label--dark m-0" for="rlr_review_form_title"> Tulis Ulasan
+                    </label>
                   </div>
-                </fieldset>
-              </div>
-              <div class="modal-footer d-flex justify-content-between">
-                <div class="rlr-review-form__buttons mt-0 py-2 px-3" style="width: 100%">
-                  <button type="button" class="btn rlr-button rlr-review-form__cancel rlr-button--small rlr-button--rounded rlr-button--white mt-0" id="closeAddReviewModalBtn">Batal</button>
-                  <button type="button" class="btn rlr-button rlr-review-form__submit rlr-button--small rlr-button--rounded rlr-button--brand mt-0">Kirim</button>
                 </div>
-              </div>
-            </section>
+                <div class="col-xl-12">
+                  <fieldset class="rlr-product-form--show px-3">
+                    <legend class="rlr-review-form__hidden-legend">Tulis ulasan</legend>
+                    <!-- Section heading -->
+                    <div class="rlr-fieldrow">
+                      <div class="rlr-fieldrow_item my-2">
+                        <div class='rating-stars text-center'>
+                          <ul id='stars'>
+                            <li class='star' title='Poor' data-value='1'>
+                              <i class='rlr-icon-font flaticon-star-1'></i>
+                            </li>
+                            <li class='star' title='Fair' data-value='2'>
+                              <i class='rlr-icon-font flaticon-star-1'></i>
+                            </li>
+                            <li class='star' title='Good' data-value='3'>
+                              <i class='rlr-icon-font flaticon-star-1'></i>
+                            </li>
+                            <li class='star' title='Excellent' data-value='4'>
+                              <i class='rlr-icon-font flaticon-star-1'></i>
+                            </li>
+                            <li class='star' title='WOW!!!' data-value='5'>
+                              <i class='rlr-icon-font flaticon-star-1'></i>
+                            </li>
+                          </ul>
+                        </div>
+                        <input type="hidden" name="rating" id="rating" value="">
+                        <input type="hidden" name="id_bisnis" value="<?= $business->idBisnis ?>">
+                      </div>
+                      <div class="rlr-fieldrow__form-element">
+                        <div class="rlr-fieldrow__item mt-2 mb-4">
+                          <label class="rlr-form-label rlr-form-label--dark mb-3" for="rlr_review_form_title"> Judul
+                          </label> <input type="text" name="judul" autocomplete="off" maxlength="70" id="rlr_review_form_title" class="form-control" placeholder="Berikan judul menarik">
+                        </div>
+                        <div class="rlr-fieldrow__item mt-2 mb-4">
+                          <label class="rlr-form-label rlr-form-label--dark mb-3" for="rlr_review_form_desc"> Ceritakan
+                            pengalaman Anda </label>
+                          <textarea id="rlr_review_form_desc" name="komentar" class="form-control form-control--text-area" placeholder="Provide more information for travelers to find your starting point easily, for example, opposite to the xyz landmark building" rows="12"></textarea>
+                        </div>
+                      </div>
+                      <div class="rlr-fieldrow__item mt-2 mb-4" style="z-index: 200">
+                        <label class="rlr-form-label rlr-form-label--dark mb-4" for="rlr_review_form_title"> Tambahkan
+                          foto dari pengalaman Anda. </label>
+                        <div class="upload-card">
+                          <div class="drag-area">
+                            <span class="visible">
+                              Drag & drop gambar disini atau
+                              <span class="select-file" role="button">Pilih File</span>
+                            </span>
+                            <span class="on-drop">Jatuhkan gambar disini</span>
+                            <input name="file[]" type="file" class="file" multiple />
+                          </div>
+
+                          <!-- IMAGE PREVIEW CONTAINER -->
+                          <div class="upload-container">
+
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </fieldset>
+                </div>
+                <div class="modal-footer d-flex justify-content-between">
+                  <div class="rlr-review-form__buttons mt-0 py-2 px-3" style="width: 100%">
+                    <button type="button" class="btn rlr-button rlr-review-form__cancel rlr-button--small rlr-button--rounded rlr-button--white mt-0" id="closeAddReviewModalBtn">Batal</button>
+                    <button type="submit" class="btn rlr-button rlr-review-form__submit rlr-button--small rlr-button--rounded rlr-button--brand mt-0">Kirim</button>
+                  </div>
+                </div>
+              </section>
+            </form>
           </div>
         </div>
       </div>
@@ -1477,77 +833,75 @@ if (empty($bisnis)) {
             </div>
             <i class="rlr-icon-font flaticon-close m-0" style="font-size: 1rem;" id="closeShowReviewModalBtn"></i>
           </div>
-          <aside class="row p-4 m-0">
+          <div class="row p-4 m-0">
             <!-- Search header -->
             <div class="rlr-search-results-header rlr-search-results-header__wrapper border-0 p-0 d-xl-flex gap-3">
               <!-- Title -->
               <div class="rlr-input-group" aria-expanded="false">
-                <input type="text" style="width: 100%;" autocomplete="off" class="form-control" placeholder="Cari ulasan">
+                <input type="text" style="width: 100%;" autocomplete="off" class="form-control" id="searchReview" placeholder="Cari ulasan" required>
               </div>
               <!-- Sort order -->
               <div class="rlr-search-results-header__sorting-wrapper">
                 <span class="rlr-search-results-header__label">Urut berdasarkan:</span>
                 <div class="dropdown rlr-dropdown rlr-js-dropdown">
-                  <button class="btn dropdown-toggle rlr-dropdown__button rlr-js-dropdown-button" type="button" id="rlr_dropdown_menu_search_results" data-bs-toggle="dropdown" aria-expanded="false" data-bs-offset="-50,35">Ulasan terbaru</button>
+                  <button class="btn dropdown-toggle rlr-dropdown__button rlr-js-dropdown-button" type="button" id="rlr_dropdown_menu_search_results" data-bs-toggle="dropdown" aria-expanded="false" data-bs-offset="-20,25">Ulasan terbaru</button>
                   <ul class="dropdown-menu rlr-dropdown__menu" aria-labelledby="rlr_dropdown_menu_search_results">
                     <li>
-                      <a class="dropdown-item rlr-dropdown__item rlr-js-dropdown-item active" href="#">Ulasan
-                        terbaru</a>
+                      <a class="dropdown-item rlr-dropdown__item rlr-js-dropdown-item active" id="sort">Ulasan terbaru</a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item rlr-dropdown__item rlr-js-dropdown-item" id="sort">Ulasan terlama</a>
                     </li>
                     <li>
                       <hr class="dropdown-divider rlr-dropdown__divider">
                     </li>
                     <li>
-                      <a class="dropdown-item rlr-dropdown__item rlr-js-dropdown-item" href="#">Rating tertinggi</a>
+                      <a class="dropdown-item rlr-dropdown__item rlr-js-dropdown-item" id="sort">Rating tertinggi</a>
                     </li>
                     <li>
-                      <a class="dropdown-item rlr-dropdown__item rlr-js-dropdown-item" href="#">Rating terendah</a>
+                      <a class="dropdown-item rlr-dropdown__item rlr-js-dropdown-item" id="sort">Rating terendah</a>
                     </li>
                   </ul>
                 </div>
               </div>
             </div>
-          </aside>
+        </div>
           <div class="row m-0">
             <aside class="col-lg-12 col-xl-4 p-4">
               <label class="rlr-form-label rlr-form-label-- rlr-product-filters__label"> Rating </label>
               <ul class="rlr-checkboxes">
                 <li class="form-check form-check-block">
-                  <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox" id="rlr-filter-age-group-1" type="checkbox" checked="">
-                  <label class="rlr-form-label rlr-form-label--checkbox rlr-product-filters__checkbox-label" for="rlr-filter-age-group-1"> Semua Rating </label>
-                </li>
-                <li class="form-check form-check-block">
-                  <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox" id="rlr-filter-rating-1" type="checkbox">
-                  <label aria-label="rating-1" for="rlr-filter-rating-1">
-                    <span class="rlr-product-filters__hidden">rating 1</span>
+                  <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox rating-checkbox" id="rlr-filter-rating-5" value="5" type="checkbox" />
+                  <label aria-label="rating-5" for="rlr-filter-rating-5">
+                    <span class="rlr-product-filters__hidden">rating 5</span>
                     <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i>
                   </label>
                 </li>
                 <li class="form-check form-check-block">
-                  <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox" id="rlr-filter-rating-2" type="checkbox">
-                  <label aria-label="rating-2" for="rlr-filter-rating-2">
-                    <span class="rlr-product-filters__hidden">rating 2</span>
+                  <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox rating-checkbox" id="rlr-filter-rating-4" value="4" type="checkbox" />
+                  <label aria-label="rating-4" for="rlr-filter-rating-4">
+                    <span class="rlr-product-filters__hidden">rating 4</span>
                     <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i>
                   </label>
                 </li>
                 <li class="form-check form-check-block">
-                  <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox" id="rlr-filter-rating-3" type="checkbox">
+                  <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox rating-checkbox" id="rlr-filter-rating-3" value="3" type="checkbox" />
                   <label aria-label="rating-3" for="rlr-filter-rating-3">
                     <span class="rlr-product-filters__hidden">rating 3</span>
                     <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i> <i class="rlr-icon-font flaticon-star"> </i>
                   </label>
                 </li>
                 <li class="form-check form-check-block">
-                  <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox" id="rlr-filter-rating-4" type="checkbox">
-                  <label aria-label="rating-4" for="rlr-filter-rating-4">
-                    <span class="rlr-product-filters__hidden">rating 4</span>
+                  <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox rating-checkbox" id="rlr-filter-rating-2" value="2" type="checkbox" />
+                  <label aria-label="rating-2" for="rlr-filter-rating-2">
+                    <span class="rlr-product-filters__hidden">rating 2</span>
                     <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i> <i class="rlr-icon-font flaticon-star"> </i> <i class="rlr-icon-font flaticon-star"> </i>
                   </label>
                 </li>
                 <li class="form-check form-check-block">
-                  <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox" id="rlr-filter-rating-5" type="checkbox">
-                  <label aria-label="rating-5" for="rlr-filter-rating-5">
-                    <span class="rlr-product-filters__hidden">rating 5</span>
+                  <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox rating-checkbox" id="rlr-filter-rating-1" value="1" type="checkbox" />
+                  <label aria-label="rating-1" for="rlr-filter-rating-1">
+                    <span class="rlr-product-filters__hidden">rating 1</span>
                     <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i> <i class="rlr-icon-font flaticon-star"> </i> <i class="rlr-icon-font flaticon-star"> </i> <i class="rlr-icon-font flaticon-star"> </i>
                   </label>
                 </li>
@@ -1555,44 +909,9 @@ if (empty($bisnis)) {
             </aside>
             <div class="col-lg-12 col-xl-8 modal-review-list">
               <!-- Review -->
-              <article class="rlr-review-card my-3" itemscope itemtype="https://schema.org/Product">
-                <div class="rlr-review-card__contact">
-                  <!--Using in Components -->
-                  <div class="rlr-avatar d-flex">
-                    <img class="rlr-avatar__media--rounded" src="../assets/images/misc/image-1_56x56.jpg" itemprop="avatar" alt="avatar icon" />
-
-                    <div class="d-flex flex-column ml-2">
-                      <span class="rlr-avatar__name" style="font-weight: 500;" itemprop="name">Patrick Bateman</span>
-                      <span class="rlr-avatar__name" style="font-weight: 300; font-size: 90%" itemprop="date">23
-                        November 2022</span>
-                    </div>
-                  </div>
-                  <div class="rlr-review-stars" itemprop="ratingValue" itemscope itemtype="https://schema.org/Product">
-                    <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i>
-                  </div>
-                </div>
-                <div class="rlr-review-card__details">
-                  <div class="rlr-review-card__title gap-4">
-                    <h3 class="rlr-review-card__title-review">Nice place</h3>
-                    <span class="rlr-svg-icon button-report-review">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#000000">
-                        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                        <g id="SVGRepo_iconCarrier">
-                          <path d="M6 14.4623H16.1909C17.6066 14.4623 18.472 12.7739 17.7261 11.4671L17.2365 10.6092C16.7547 9.76504 16.7547 8.69728 17.2365 7.85309L17.7261 6.99524C18.472 5.68842 17.6066 4 16.1909 4L6 4L6 14.4623ZM6 14.4623L6 20" stroke="#363853" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                        </g>
-                      </svg>
-                    </span>
-                  </div>
-                  <div class="rlr-review-card__comments" itemprop="review description">
-                    <div class="rlr-readmore-desc">
-                      <p class="rlr-readmore-desc__content rlr-js-desc">Dolor elit voluptate cupidatat in eiusmod.
-                        Eiusmod ex eu incididunt etile pariatur dolor mollit reprehenderit magna tempor ex minim velit
-                        sunt do.</p>
-                      <span class="rlr-readmore-desc__readmore rlr-js-readmore">Selengkapnya...</span>
-                    </div>
-                  </div>
-                </div>
-              </article>
+              <div class="review-wrapper pb-3" style="height: 500px; overflow-y: scroll;">
+                <!-- Review section here -->
+              </div>
             </div>
           </div>
         </div>
@@ -1600,48 +919,60 @@ if (empty($bisnis)) {
 
       <!-- Report Modal -->
       <div id="reportReviewModal" class="modal">
-        <!-- Modal content -->
         <div class="modal-content">
-          <!-- Product cards -->
-          <div class="modal-header d-flex justify-content-between align-items-center px-4 py-3">
-            <div class="d-flex justify-content-start gap-2">
+          <div id="rlr-review-from" class="container-xxxl">
+            <form action="reportReview/" method="POST">
+              <section class="rlr-section rlr-section__content--md-top row justify-content-center my-0">
+                <div class="modal-header">
+                  <div class="rlr-section__heading py-4 px-3">
+                    <label class="rlr-form-label rlr-form-label--dark m-0" for="rlr_review_form_title"> Laporkan ulasan
+                    </label>
+                  </div>
+                </div>
+                <div class="col-xl-12">
+                  <fieldset class="rlr-product-form--show px-3">
+                    <legend class="rlr-review-form__hidden-legend">Tulis ulasan</legend>
+                    <!-- Section heading -->
+                    <div class="rlr-fieldrow">
 
-              <span class="rlr-svg-icon m-0" style="font-size: 1.5rem;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#000000">
-                  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                  <g id="SVGRepo_iconCarrier">
-                    <path d="M6 14.4623H16.1909C17.6066 14.4623 18.472 12.7739 17.7261 11.4671L17.2365 10.6092C16.7547 9.76504 16.7547 8.69728 17.2365 7.85309L17.7261 6.99524C18.472 5.68842 17.6066 4 16.1909 4L6 4L6 14.4623ZM6 14.4623L6 20" stroke="#363853" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                  </g>
-                </svg>
-              </span>
-              <h1 class="rlr-section__heading--main rlr-product-detail-header__title m-0" style="font-size: 1.4rem; font-weight: 400;">Laporkan ulasan</h1>
-            </div>
-          </div>
-          <div class="d-flex align-items-center px-4 py-3">
-            <ul class="rlr-radios">
-              <li class="form-check">
-                <input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="profane_content_review" value="Ulasan tidak sopan, mengandung unsur pelecehan seksual atau ujaran kebencian." /> <label class="rlr-form-label rlr-form-label--radio" for="profane_content_review"> Ulasan tidak sopan,
-                  mengandung unsur pelecehan seksual atau ujaran kebencian. </label>
-              </li>
-              <li class="form-check"><input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="ilegal_activity_review" value="Ulasan mempromosikan kegiatan ilegal" /> <label class="rlr-form-label rlr-form-label--radio" for="ilegal_activity_review"> Ulasan mempromosikan
-                  kegiatan ilegal </label></li>
-              <li class="form-check"><input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="biased_review" value="Ulasan bias atau ditulis oleh orang yang berafiliasi dengan bisnis" /> <label class="rlr-form-label rlr-form-label--radio" for="biased_review"> Ulasan bias atau ditulis oleh orang
-                  yang berafiliasi dengan bisnis </label></li>
-              <li class="form-check"><input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="wrong_business_review" value="Ulasan ditujukan untuk bisnis yang salah" /> <label class="rlr-form-label rlr-form-label--radio" for="wrong_business_review"> Ulasan ditujukan untuk
-                  bisnis yang salah </label></li>
-              <li class="form-check"><input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="duplicate_review" value="Ulasan merupakan duplikat yang dibuat oleh orang yang sama" /> <label class="rlr-form-label rlr-form-label--radio" for="duplicate_review"> Ulasan merupakan duplikat yang
-                  dibuat oleh orang yang sama </label></li>
-              <li class="form-check"><input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="not_personal_review" value="Ulasan tidak menggambarkan pengalaman pribadi" /> <label class="rlr-form-label rlr-form-label--radio" for="not_personal_review"> Ulasan tidak menggambarkan
-                  pengalaman pribadi </label></li>
-              <li class="form-check"><input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="other_review" value="Saya ingin melapor hal lain" /> <label class="rlr-form-label rlr-form-label--radio" for="other_review"> Saya ingin melapor hal lain </label>
-              </li>
-            </ul>
-          </div>
-          <div class="modal-footer d-flex justify-content-between">
-            <div class="rlr-review-form__buttons mt-0 py-2 px-3" style="width: 100%">
-              <button type="button" class="btn rlr-button rlr-review-form__cancel rlr-button--small rlr-button--rounded rlr-button--white mt-0" id="closeReportReviewBtn">Batal</button>
-              <button type="button" class="btn rlr-button rlr-review-form__submit rlr-button--small rlr-button--rounded rlr-button--brand mt-0">Kirim</button>
-            </div>
+                      <div class="rlr-fieldrow__form-element">
+                        <ul class="rlr-radios">
+                          <li class="form-check">
+                            <input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="profane_content_review" value="Ulasan tidak sopan, mengandung unsur pelecehan seksual atau ujaran kebencian." /> <label class="rlr-form-label rlr-form-label--radio" for="profane_content_review"> Ulasan tidak sopan,
+                              mengandung unsur pelecehan seksual atau ujaran kebencian. </label>
+                          </li>
+                          <li class="form-check"><input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="ilegal_activity_review" value="Ulasan mempromosikan kegiatan ilegal" /> <label class="rlr-form-label rlr-form-label--radio" for="ilegal_activity_review"> Ulasan mempromosikan
+                              kegiatan ilegal </label></li>
+                          <li class="form-check"><input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="biased_review" value="Ulasan bias atau ditulis oleh orang yang berafiliasi dengan bisnis" /> <label class="rlr-form-label rlr-form-label--radio" for="biased_review"> Ulasan bias atau ditulis oleh orang
+                              yang berafiliasi dengan bisnis </label></li>
+                          <li class="form-check"><input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="wrong_business_review" value="Ulasan ditujukan untuk bisnis yang salah" /> <label class="rlr-form-label rlr-form-label--radio" for="wrong_business_review"> Ulasan ditujukan untuk
+                              bisnis yang salah </label></li>
+                          <li class="form-check"><input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="duplicate_review" value="Ulasan merupakan duplikat yang dibuat oleh orang yang sama" /> <label class="rlr-form-label rlr-form-label--radio" for="duplicate_review"> Ulasan merupakan duplikat yang
+                              dibuat oleh orang yang sama </label></li>
+                          <li class="form-check"><input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="not_personal_review" value="Ulasan tidak menggambarkan pengalaman pribadi" /> <label class="rlr-form-label rlr-form-label--radio" for="not_personal_review"> Ulasan tidak menggambarkan
+                              pengalaman pribadi </label></li>
+                          <li class="form-check"><input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="other_review" value="Saya ingin melapor hal lain" /> <label class="rlr-form-label rlr-form-label--radio" for="other_review"> Saya ingin melapor hal lain </label>
+                          </li>
+                        </ul>
+                      </div>
+                      <input type="hidden" id="id_ulasan" name="id_ulasan" value="">
+                      <div class="rlr-fieldrow__form-element">
+                        <div class="rlr-fieldrow__item mt-2 mb-4">
+                          <label class="rlr-form-label rlr-form-label--dark mb-3" for="rlr_review_form_desc"> Jelaskan masalah Anda </label>
+                          <textarea id="rlr_review_form_desc" name="description" class="form-control form-control--text-area" placeholder="Tolong berikan deskripsi rinci tentang masalah Anda" rows="12"></textarea>
+                        </div>
+                      </div>
+                    </div>
+                  </fieldset>
+                </div>
+                <div class="modal-footer d-flex justify-content-between">
+                  <div class="rlr-review-form__buttons mt-0 py-2 px-3" style="width: 100%">
+                    <button type="button" class="btn rlr-button rlr-review-form__cancel rlr-button--small rlr-button--rounded rlr-button--white mt-0" id="closeReportReviewModalBtn">Batal</button>
+                    <button type="submit" class="btn rlr-button rlr-review-form__submit rlr-button--small rlr-button--rounded rlr-button--brand mt-0">Kirim</button>
+                  </div>
+                </div>
+              </section>
+            </form>
           </div>
         </div>
       </div>
@@ -1651,33 +982,60 @@ if (empty($bisnis)) {
   <footer class="rlr-footer rlr-section rlr-section__mt">
     <div class="container">
       <!-- Footer menu -->
-      <div class="rlr-footer__menu">
+      <div class="rlr-footer__row justify-content-between">
         <nav class="rlr-footer__menu__col">
+          <div class="navigation-brand-text">
+            <div class="rlr-logo rlr-logo__navbar-brand rlr-logo--default mb-3">
+              <a href="../">
+                <img src="../assets/svg/logoipsum-287.svg" alt="#" class="" style="width: 200px;" />
+              </a>
+            </div>
+          </div>
           <!-- Footer menu col -->
           <h4>E-Tourism</h4>
-          <ul>
-            <li><a href="#">Blog</a></li>
-            <li><a href="#">Hotel</a></li>
-            <li><a href="#">Restoran</a></li>
-            <li><a href="#">Objek Wisata</a></li>
-          </ul>
+          <p>World Tourism Organization<br>Calle Poeta Joan Maragall 42<br>28020 Madrid, Spain<br>info@unwto.org</p>
         </nav>
-        <nav class="rlr-footer__menu__col">
-          <!-- Footer menu col -->
-          <h4>Bisnis</h4>
-          <ul>
-            <li><a href="#">Daftarkan bisnis</a></li>
-            <li><a href="#">Hubungi kami</a></li>
-          </ul>
-        </nav>
-        <!-- Subscribe -->
-        <nav class="rlr-footer__menu__col rlr-footer__menu__col--lg">
-          <h4>Newsletter</h4>
-          <form class="rlr-subscribe" data-aos="fade-up" data-aos-offset="250" data-aos-duration="700">
-            <input type="email" class="rlr-subscribe__input" placeholder="E-mail" />
-            <button class="btn">Gabung</button>
-          </form>
-        </nav>
+
+        <div class="d-flex rlr-footer__menu">
+          <nav class="rlr-footer__menu__col">
+            <!-- Footer menu col -->
+            <h4>Destinasi</h4>
+            <ul>
+              <?
+              $count = 0;
+              foreach ($place->getKabupatenByProvinsi('51') as $kabupaten) :
+                $count++ ?>
+                <li><a href="../search/?kabupaten=<?= $kabupaten['id_kabupaten'] ?>"><?= $kabupaten['nama'] ?></a></li>
+              <?
+                if ($count == 4) break;
+              endforeach; ?>
+
+              <? if (count($place->getKabupatenByProvinsi('51')) > 4) : ?>
+                <li><a href="../search/?provinsi=51">Jelajahi <?= $place->getProvinsiNameById('51') ?></a></li>
+              <? endif; ?>
+
+            </ul>
+          </nav>
+          <nav class="rlr-footer__menu__col">
+            <!-- Footer menu col -->
+            <h4>Kategori</h4>
+            <ul>
+              <li><a href="../search/?kategori=1">Akomodasi</a></li>
+              <li><a href="../search/?kategori=2">Makanan & Minuman</a></li>
+              <li><a href="../search/?kategori=3">Objek Wisata</a></li>
+            </ul>
+          </nav>
+          <nav class="rlr-footer__menu__col">
+            <!-- Footer menu col -->
+            <h4>Lainnya</h4>
+            <ul>
+              <li><a href="../blog/">Blog</a></li>
+              <li><a href="../new-listing/">Daftarkan bisnis</a></li>
+              <li><a href="../contact/">Hubungi kami</a></li>
+            </ul>
+          </nav>
+        </div>
+
       </div>
       <!-- Footer bottom -->
       <div class="rlr-footer__legal">
@@ -1690,73 +1048,51 @@ if (empty($bisnis)) {
           </div>
           <!-- Footer social links -->
           <div class="rlr-footer__legal__row__col">
-            <a href="#">Linkedin</a>
+            <a href="https://twitter.com">Twitter</a>
             <span class="separate">/</span>
-            <a href="#">Facebook</a>
+            <a href="https://facebook.com">Facebook</a>
             <span class="separate">/</span>
-            <a href="#">Instagram</a>
+            <a href="https://instagram.com">Instagram</a>
           </div>
         </div>
       </div>
-    </div>
   </footer>
   <!-- Scripts -->
+  <script src="../vendors/jquery.min.js"></script>
   <script src="../vendors/navx/js/navigation.min.js" defer></script>
-  <script src="../js/main.js" defer></script>
-  <script src="../js/custom.js"></script>
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+  <script src="../js/old/main.js" defer></script>
+  <script src="../js/listing.js"></script>
+  <script src="../js/upload.js"></script>
+
   <script>
-    $(window.location.hash).fadeIn(100, 'linear');
+    let map = L.map('map');
 
-    $('#addReviewModalBtn').on('click', function(e) {
-      e.preventDefault();
-      $('#addReviewModal').fadeIn(100, 'linear');
-    });
-    $('#closeAddReviewModalBtn').on('click', function(e) {
-      e.preventDefault();
-      $('#addReviewModal').fadeOut(100, 'linear');
-    });
-    $(document).click(function(e) {
-      if ($(e.target).is('#addReviewModal')) {
-        $('#addReviewModal').fadeOut(100, 'linear');
-      }
-    });
+    function loadMap(lat, lng) {
+      map.setView([lat, lng], 13);
+      map.invalidateSize(false);
 
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+      }).addTo(map);
 
-    $('#showReviewModalBtn').on('click', function(e) {
-      e.preventDefault();
-      $('#showReviewModal').fadeIn(100, 'linear');
-    });
-    $('#closeShowReviewModalBtn').on('click', function(e) {
-      e.preventDefault();
-      $('#showReviewModal').fadeOut(100, 'linear');
-    });
-    $(document).click(function(e) {
-      if ($(e.target).is('#showReviewModal')) {
-        $('#showReviewModal').fadeOut(100, 'linear');
-      }
-    });
-    if (location.href.indexOf('#showReviewModal') != -1) {
-      e.preventDefault();
-      $('#showReviewModal').fadeIn(100, 'linear');
-    };
+      marker = L.marker([lat, lng], {
+        draggable: false
+      }).addTo(map);
+    }
 
+    loadMap(<?= $business->lat ?>, <?= $business->lng ?>);
+  </script>
 
-    $('.button-report-review').on('click', function(e) {
-      e.preventDefault();
-      $('#reportReviewModal').fadeIn(100, 'linear');
-    });
+  <script>
+    $(document).ready(function() {
 
-    $('#closeReportReviewBtn').on('click', function(e) {
-      e.preventDefault();
-      $('#reportReviewModal').fadeOut(100, 'linear');
-    });
+      param.business_id = <?= $_GET['id'] ?>
 
-    $(document).click(function(e) {
-      if ($(e.target).is('#reportReviewModal')) {
-        $('#reportReviewModal').fadeOut(100, 'linear');
-      }
+      getReviews(param);
     });
   </script>
+
 </body>
 
 </html>

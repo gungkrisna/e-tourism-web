@@ -1,3 +1,22 @@
+<?php
+include '../src/conn.php';
+include '../src/Business.php';
+include '../src/BusinessService.php';
+include '../src/Place.php';
+
+session_start();
+
+if (isset($_SESSION['user_id'])) {
+  $stmt = $conn->prepare('SELECT * FROM pengguna WHERE id_pengguna = ?');
+  $stmt->execute([$_SESSION['user_id']]);
+  $user = $stmt->fetch();
+}
+
+$business_service = new BusinessService($conn);
+$place = new Place($conn);
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -12,6 +31,10 @@
   <link rel="stylesheet" href="../styles/plugins.css" />
   <!-- Main CSS -->
   <link rel="stylesheet" href="../styles/main.css" />
+
+  <link rel="stylesheet" href="../styles/upload.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin="" />
+
 </head>
 
 <body class="rlr-body">
@@ -41,8 +64,7 @@
               </a>
             </div>
           </div>
-          <span class="rlr-sVGIcon navigation-body-close-button"> <i
-              class="rlr-icon-font rlr-icon-font--megamenu flaticon-close"> </i> </span>
+          <span class="rlr-sVGIcon navigation-body-close-button"> <i class="rlr-icon-font rlr-icon-font--megamenu flaticon-close"> </i> </span>
         </div>
 
         <!-- Main menu -->
@@ -618,10 +640,7 @@
           </li>
           <!-- User account dropdown -->
           <li class="navigation-item">
-            <a class="navigation-link" href="#"> Saul Goodman <img
-                class="ui right spaced rlr-avatar rlr-avatar__media--rounded" style="height: 32px; width: 32px;"
-                src="https://static.wikia.nocookie.net/inconsistently-heinous/images/e/e0/Saul_2009.jpg"
-                alt="account avatar" /> </a>
+            <a class="navigation-link" href="#"> Saul Goodman <img class="ui right spaced rlr-avatar rlr-avatar__media--rounded" style="height: 32px; width: 32px;" src="https://static.wikia.nocookie.net/inconsistently-heinous/images/e/e0/Saul_2009.jpg" alt="account avatar" /> </a>
             <ul class="navigation-dropdown">
               <li class="navigation-dropdown-item">
                 <a class="navigation-dropdown-link" href="../my-account-pages--dashboard.html">Edit profil</a>
@@ -654,9 +673,7 @@
                   <div class="rlr-step__icon rlr-step__icon--active">
                     <svg width="56" height="56" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <rect width="56" height="56" rx="28" fill="#28B0A6"></rect>
-                      <path
-                        d="M38.653 13h-1.607v1.492a.56.56 0 0 1-.558.56.557.557 0 0 1-.558-.56V13H19.343v1.492a.56.56 0 0 1-.558.56.557.557 0 0 1-.558-.56V13H16.62a2.63 2.63 0 0 0-1.857.782 2.647 2.647 0 0 0-.763 1.87v24.724a2.626 2.626 0 0 0 .766 1.859A2.612 2.612 0 0 0 16.62 43h22.033a2.605 2.605 0 0 0 2.422-1.618c.131-.319.198-.66.198-1.005V15.651a2.647 2.647 0 0 0-.764-1.87A2.63 2.63 0 0 0 38.654 13zM23.705 35.085l-3.503 3.36a.557.557 0 0 1-.78-.009l-1.905-1.911a.56.56 0 0 1 .608-.913c.068.028.13.069.181.12l1.52 1.525 3.108-2.982a.557.557 0 0 1 .944.418.561.561 0 0 1-.173.392zm0-8-3.503 3.36a.557.557 0 0 1-.78-.009l-1.905-1.911a.561.561 0 0 1 .395-.956c.148 0 .29.059.394.164l1.52 1.524 3.108-2.982a.557.557 0 0 1 .944.418.561.561 0 0 1-.173.392zm0-8-3.503 3.36a.557.557 0 0 1-.78-.009l-1.905-1.911a.56.56 0 0 1 .608-.913c.068.028.13.069.181.12l1.52 1.525 3.108-2.982a.557.557 0 0 1 .944.418.561.561 0 0 1-.173.392zM37.362 36.92H28.19a.557.557 0 0 1-.558-.56.56.56 0 0 1 .558-.56h9.17a.558.558 0 0 1 .559.56.561.561 0 0 1-.559.56zm0-8H28.19a.557.557 0 0 1-.558-.56.56.56 0 0 1 .558-.56h9.17a.558.558 0 0 1 .559.56.561.561 0 0 1-.559.56zm0-8H28.19a.557.557 0 0 1-.558-.56.56.56 0 0 1 .558-.56h9.17a.558.558 0 0 1 .559.56.561.561 0 0 1-.559.56z"
-                        fill="#fff"></path>
+                      <path d="M38.653 13h-1.607v1.492a.56.56 0 0 1-.558.56.557.557 0 0 1-.558-.56V13H19.343v1.492a.56.56 0 0 1-.558.56.557.557 0 0 1-.558-.56V13H16.62a2.63 2.63 0 0 0-1.857.782 2.647 2.647 0 0 0-.763 1.87v24.724a2.626 2.626 0 0 0 .766 1.859A2.612 2.612 0 0 0 16.62 43h22.033a2.605 2.605 0 0 0 2.422-1.618c.131-.319.198-.66.198-1.005V15.651a2.647 2.647 0 0 0-.764-1.87A2.63 2.63 0 0 0 38.654 13zM23.705 35.085l-3.503 3.36a.557.557 0 0 1-.78-.009l-1.905-1.911a.56.56 0 0 1 .608-.913c.068.028.13.069.181.12l1.52 1.525 3.108-2.982a.557.557 0 0 1 .944.418.561.561 0 0 1-.173.392zm0-8-3.503 3.36a.557.557 0 0 1-.78-.009l-1.905-1.911a.561.561 0 0 1 .395-.956c.148 0 .29.059.394.164l1.52 1.524 3.108-2.982a.557.557 0 0 1 .944.418.561.561 0 0 1-.173.392zm0-8-3.503 3.36a.557.557 0 0 1-.78-.009l-1.905-1.911a.56.56 0 0 1 .608-.913c.068.028.13.069.181.12l1.52 1.525 3.108-2.982a.557.557 0 0 1 .944.418.561.561 0 0 1-.173.392zM37.362 36.92H28.19a.557.557 0 0 1-.558-.56.56.56 0 0 1 .558-.56h9.17a.558.558 0 0 1 .559.56.561.561 0 0 1-.559.56zm0-8H28.19a.557.557 0 0 1-.558-.56.56.56 0 0 1 .558-.56h9.17a.558.558 0 0 1 .559.56.561.561 0 0 1-.559.56zm0-8H28.19a.557.557 0 0 1-.558-.56.56.56 0 0 1 .558-.56h9.17a.558.558 0 0 1 .559.56.561.561 0 0 1-.559.56z" fill="#fff"></path>
                     </svg>
                   </div>
                   <div class="rlr-step__text d-none d-lg-block">
@@ -668,12 +685,8 @@
                   <div class="rlr-step__icon rlr-step__icon--inactive">
                     <svg width="56" height="56" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <rect width="56" height="56" rx="28" fill="#546179"></rect>
-                      <path
-                        d="M28.716 36.876h-5.882a.98.98 0 0 0 0 1.96h5.882a2.941 2.941 0 0 0 0-5.881h-1.96a.98.98 0 0 1 0-1.96h5.88a.98.98 0 0 0 0-1.961h-5.88a2.941 2.941 0 0 0 0 5.881h1.96a.98.98 0 0 1 0 1.96zM36.558 27.318a1.49 1.49 0 0 0-2.98 0c0 .824 1.49 2.696 1.49 2.696s1.49-1.872 1.49-2.696zM22.423 34.454a1.49 1.49 0 0 0-2.98 0c0 .824 1.49 2.686 1.49 2.686s1.49-1.862 1.49-2.686z"
-                        fill="#fff"></path>
-                      <path
-                        d="M28 7.886C16.898 7.9 7.902 16.894 7.89 27.995c1.105 26.677 39.118 26.67 40.218 0C48.096 16.895 39.1 7.899 28 7.886zM40.742 38.22a2.937 2.937 0 0 1-2.933 2.94H18.197a2.937 2.937 0 0 1-2.941-2.932V23.505h25.487v14.714zm0-16.68H15.256v-1.911a2.95 2.95 0 0 1 2.94-2.94h2.942v-.981a.98.98 0 0 1 1.96 0v.98h3.921v-.98a.98.98 0 0 1 1.96 0v.98h3.922v-.98a.98.98 0 0 1 1.96 0v.98h2.941a2.95 2.95 0 0 1 2.941 2.941v1.912z"
-                        fill="#fff"></path>
+                      <path d="M28.716 36.876h-5.882a.98.98 0 0 0 0 1.96h5.882a2.941 2.941 0 0 0 0-5.881h-1.96a.98.98 0 0 1 0-1.96h5.88a.98.98 0 0 0 0-1.961h-5.88a2.941 2.941 0 0 0 0 5.881h1.96a.98.98 0 0 1 0 1.96zM36.558 27.318a1.49 1.49 0 0 0-2.98 0c0 .824 1.49 2.696 1.49 2.696s1.49-1.872 1.49-2.696zM22.423 34.454a1.49 1.49 0 0 0-2.98 0c0 .824 1.49 2.686 1.49 2.686s1.49-1.862 1.49-2.686z" fill="#fff"></path>
+                      <path d="M28 7.886C16.898 7.9 7.902 16.894 7.89 27.995c1.105 26.677 39.118 26.67 40.218 0C48.096 16.895 39.1 7.899 28 7.886zM40.742 38.22a2.937 2.937 0 0 1-2.933 2.94H18.197a2.937 2.937 0 0 1-2.941-2.932V23.505h25.487v14.714zm0-16.68H15.256v-1.911a2.95 2.95 0 0 1 2.94-2.94h2.942v-.981a.98.98 0 0 1 1.96 0v.98h3.921v-.98a.98.98 0 0 1 1.96 0v.98h3.922v-.98a.98.98 0 0 1 1.96 0v.98h2.941a2.95 2.95 0 0 1 2.941 2.941v1.912z" fill="#fff"></path>
                     </svg>
                   </div>
                   <div class="rlr-step__text d-none d-lg-block">
@@ -685,9 +698,7 @@
                   <div class="rlr-step__icon rlr-step__icon--inactive">
                     <svg width="56" height="56" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <rect width="56" height="56" rx="28" fill="#546179" />
-                      <path
-                        d="M28 47a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5zM28 12c-5.376 0-9.75 4.374-9.75 9.75v.938h7.5v-.938c0-1.24 1.01-2.25 2.25-2.25s2.25 1.01 2.25 2.25a2.25 2.25 0 0 1-.796 1.717L24.25 27.89v6.734h7.5v-3.266l2.561-2.177a9.737 9.737 0 0 0 3.439-7.432c0-5.376-4.374-9.75-9.75-9.75z"
-                        fill="#fff" />
+                      <path d="M28 47a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5zM28 12c-5.376 0-9.75 4.374-9.75 9.75v.938h7.5v-.938c0-1.24 1.01-2.25 2.25-2.25s2.25 1.01 2.25 2.25a2.25 2.25 0 0 1-.796 1.717L24.25 27.89v6.734h7.5v-3.266l2.561-2.177a9.737 9.737 0 0 0 3.439-7.432c0-5.376-4.374-9.75-9.75-9.75z" fill="#fff" />
                     </svg>
                   </div>
                   <div class="rlr-step__text d-none d-lg-block">
@@ -699,9 +710,7 @@
                   <div class="rlr-step__icon rlr-step__icon--inactive">
                     <svg width="56" height="56" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <rect width="56" height="56" rx="28" fill="#546179" />
-                      <path
-                        d="M24.253 39.954a1.63 1.63 0 0 1-2.31 0l-9.225-9.226a2.45 2.45 0 0 1 0-3.466l1.155-1.155a2.45 2.45 0 0 1 3.466 0l5.76 5.76L38.66 16.303a2.45 2.45 0 0 1 3.466 0l1.155 1.156a2.45 2.45 0 0 1 0 3.465l-19.029 19.03z"
-                        fill="#fff" />
+                      <path d="M24.253 39.954a1.63 1.63 0 0 1-2.31 0l-9.225-9.226a2.45 2.45 0 0 1 0-3.466l1.155-1.155a2.45 2.45 0 0 1 3.466 0l5.76 5.76L38.66 16.303a2.45 2.45 0 0 1 3.466 0l1.155 1.156a2.45 2.45 0 0 1 0 3.465l-19.029 19.03z" fill="#fff" />
                     </svg>
                   </div>
                   <div class="rlr-step__text d-none d-lg-block">
@@ -712,14 +721,13 @@
             </div>
           </aside>
           <div class="col-xl-6 offset-xl-1">
-            <form id="jsForm">
+            <form action="create/" method="POST" id="jsForm" enctype="multipart/form-data">
               <fieldset class="rlr-product-form--hide start" data-attr="js-step-1">
                 <!-- Section heading -->
                 <div class="rlr-section__heading">
-                  <h2 class="rlr-section__heading--main">Tambahkan judul dan pilih kategori bisnis</h2>
-                  <span class="rlr-section__heading--sub">Nama bisnis dan kategori yang sesuai akan membantu dalam
-                    mengelompokkan bisnis Anda pada situs listing kami sehingga mudah ditemukan oleh pengguna
-                    lain.</span>
+                  <h2 class="rlr-section__heading--main">Tambahkan judul, deskripsi, dan pilih kategori bisnis</h2>
+                  <span class="rlr-section__heading--sub">Nama bisnis, deskripsi, dan kategori yang sesuai akan membantu
+                    bisnis Anda untuk dikenal oleh calon pelanggan pada situs listing kami.</span>
                 </div>
                 <div class="rlr-fieldrow">
                   <div class="rlr-fieldrow__form-element">
@@ -728,43 +736,43 @@
                         <div class="col-xl-10">
                           <label class="rlr-form-label rlr-form-label--dark" for="rlr-product-form-product-title"> Nama
                             Bisnis </label>
-                          <input type="text" autocomplete="off" maxlength="70" id="rlr-product-form-product-title"
-                            class="form-control js-form-title" placeholder="Masukkan nama bisnis disini" />
+                          <input type="text" name="nama" autocomplete="off" maxlength="70" id="rlr-product-form-product-title" class="form-control js-form-title" placeholder="Masukkan nama bisnis disini" />
                         </div>
                         <div class="col-xl-2">
-                          <button type="button"
-                            class="btn rlr-button btn rlr-button rlr-button--form-tooltip rlr-button--transparent rlr-js-tool-tip"
-                            data-tippy-content='&lt;span class&#x3D;"type-lead-semibold"&gt;Nama Bisnis&lt;/span&gt; &lt;p&gt;Pastikan nama yang Anda masukkan menggambarkan bisnis Anda dengan tepat agar mudah ditemukan oleh calon pelanggan.&lt;/p&gt;'>
+                          <button type="button" class="btn rlr-button btn rlr-button rlr-button--form-tooltip rlr-button--transparent rlr-js-tool-tip" data-tippy-content='&lt;span class&#x3D;"type-lead-semibold"&gt;Nama Bisnis&lt;/span&gt; &lt;p&gt;Pastikan nama yang Anda masukkan menggambarkan bisnis Anda dengan tepat agar mudah ditemukan oleh calon pelanggan.&lt;/p&gt;'>
                             <i class="rlr-icon-font flaticon-information-button"> </i>
                           </button>
                         </div>
                       </div>
+                    </div>
+                    <div class="rlr-fieldrow__item js-fieldrow__item rlr-fieldrow__item--multiple has-success mt-5">
+                      <div class="row">
+                        <div class="col-xl-10">
+                          <label class="rlr-form-label rlr-form-label--dark" for="rlr-product-form-product-overview"> Deskripsi </label>
+                          <textarea required="" id="deskripsi" name="deskripsi" class="form-control form-control--text-area" placeholder="Jelaskan tentang bisnis Anda" rows="12"></textarea>
+                        </div>
+                        <div class="col-xl-2">
+                          <button type="button" class="btn rlr-button btn rlr-button rlr-button--form-tooltip rlr-button--transparent rlr-js-tool-tip" data-tippy-content="<span class=&quot;type-lead-semibold&quot;>Deskripsi</span> <p>Masukkan deskripsi singkat tentang bisnis Anda. Deskripsi akan ditampilkan pada halaman bisnis untuk membantu calon pelanggan memahami keunikan bisnis Anda.</p>">
+                            <i class="rlr-icon-font flaticon-information-button"> </i>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="rlr-error text-help" style="display: none;"></div>
                     </div>
                     <div class="rlr-fieldrow__item js-fieldrow__item">
                       <div class="row">
                         <div class="col-xl-10">
                           <label class="rlr-form-label rlr-form-label--dark"> Kategori Bisnis </label>
                           <ul class="rlr-radios">
-                            <li class="form-check">
-                              <input type="radio" required class="form-check-input rlr-form-check-input" name="category"
-                                id="hotel" value="Hotel" /> <label class="rlr-form-label rlr-form-label--radio"
-                                for="hotel"> Hotel </label>
-                            </li>
-                            <li class="form-check"><input type="radio" required
-                                class="form-check-input rlr-form-check-input" name="category" id="restoran"
-                                value="Restoran" /> <label class="rlr-form-label rlr-form-label--radio" for="restoran">
-                                Restoran </label></li>
-                            <li class="form-check">
-                              <input type="radio" required class="form-check-input rlr-form-check-input" name="category"
-                                id="objek_wisata" value="Objek Wisata" /> <label
-                                class="rlr-form-label rlr-form-label--radio" for="objek_wisata"> Objek Wisata </label>
-                            </li>
+                            <? foreach ($business_service->getAllBusinessCategory() as $c) : ?>
+                              <li class="form-check">
+                                <input type="radio" required class="form-check-input rlr-form-check-input" name="kategori" id="<?= $c['id_kategori'] ?>" value="<?= $c['id_kategori'] ?>" /> <label class="rlr-form-label rlr-form-label--radio" for="<?= $c['id_kategori'] ?>"> <?= $c['nama'] ?> </label>
+                              </li>
+                            <? endforeach; ?>
                           </ul>
                         </div>
                         <div class="col-xl-2">
-                          <button type="button"
-                            class="btn rlr-button btn rlr-button rlr-button--form-tooltip rlr-button--transparent rlr-js-tool-tip"
-                            data-tippy-content='&lt;span class&#x3D;"type-lead-semibold"&gt;Kategori Bisnis&lt;/span&gt; &lt;p&gt;Pilih kategori yang sesuai untuk mengelompokkan bisnis Anda di situs listing kami.&lt;/p&gt;'>
+                          <button type="button" class="btn rlr-button btn rlr-button rlr-button--form-tooltip rlr-button--transparent rlr-js-tool-tip" data-tippy-content='&lt;span class&#x3D;"type-lead-semibold"&gt;Kategori Bisnis&lt;/span&gt; &lt;p&gt;Pilih kategori yang sesuai untuk mengelompokkan bisnis Anda di situs listing kami.&lt;/p&gt;'>
                             <i class="rlr-icon-font flaticon-information-button"> </i>
                           </button>
                         </div>
@@ -784,52 +792,28 @@
                   <div class="rlr-fieldrow__form-element">
                     <div class="rlr-fieldrow__item js-fieldrow__item">
                       <div class="row">
-                        <div class="col-xl-10">
+                        <div class="col-xl-12">
                           <label class="rlr-form-label rlr-form-label--dark" for="rlr-product-form-product-title">
                             Telepon </label>
-                          <input type="text" autocomplete="off" maxlength="70" id="rlr-product-form-product-title"
-                            class="form-control js-form-title" placeholder="+628123894434" />
-                        </div>
-                        <div class="col-xl-2">
-                          <button type="button"
-                            class="btn rlr-button btn rlr-button rlr-button--form-tooltip rlr-button--transparent rlr-js-tool-tip"
-                            data-tippy-content='&lt;span class&#x3D;"type-lead-semibold"&gt;Nomor Telepon&lt;/span&gt; &lt;p&gt;Pastikan untuk memasukkan nomor yang dapat dihubungi agar pelanggan dapat dengan mudah menghubungi bisnis Anda.&lt;/p&gt;'>
-                            <i class="rlr-icon-font flaticon-information-button"> </i>
-                          </button>
+                          <input type="tel" name="telepon" autocomplete="off" maxlength="70" id="rlr-product-form-product-title" class="form-control js-form-title" placeholder="+62 361-5555-5555" required />
                         </div>
                       </div>
                     </div>
                     <div class="mt-4 rlr-fieldrow__item js-fieldrow__item">
                       <div class="row">
-                        <div class="col-xl-10">
+                        <div class="col-xl-12">
                           <label class="rlr-form-label rlr-form-label--dark" for="rlr-product-form-product-title">
                             E-mail </label>
-                          <input type="text" autocomplete="off" maxlength="70" id="rlr-product-form-product-title"
-                            class="form-control js-form-title" placeholder="hi@e-tourism.com" />
-                        </div>
-                        <div class="col-xl-2">
-                          <button type="button"
-                            class="btn rlr-button btn rlr-button rlr-button--form-tooltip rlr-button--transparent rlr-js-tool-tip"
-                            data-tippy-content='&lt;span class&#x3D;"type-lead-semibold"&gt;E-mail&lt;/span&gt; &lt;p&gt;Pastikan untuk memasukkan alamat email yang valid agar pelanggan dapat dengan mudah menghubungi bisnis Anda melalui email.&lt;/p&gt;'>
-                            <i class="rlr-icon-font flaticon-information-button"> </i>
-                          </button>
+                          <input type="email" name="email" autocomplete="off" maxlength="70" id="rlr-product-form-product-title" class="form-control js-form-title" placeholder="hi@e-tourism.com" required />
                         </div>
                       </div>
                     </div>
                     <div class="mt-4 rlr-fieldrow__item js-fieldrow__item">
                       <div class="row">
-                        <div class="col-xl-10">
+                        <div class="col-xl-12">
                           <label class="rlr-form-label rlr-form-label--dark" for="rlr-product-form-product-title">
-                            Website </label>
-                          <input type="text" autocomplete="off" maxlength="70" id="rlr-product-form-product-title"
-                            class="form-control js-form-title" placeholder="e-tourism.com" />
-                        </div>
-                        <div class="col-xl-2">
-                          <button type="button"
-                            class="btn rlr-button btn rlr-button rlr-button--form-tooltip rlr-button--transparent rlr-js-tool-tip"
-                            data-tippy-content='&lt;span class&#x3D;"type-lead-semibold"&gt;Website&lt;/span&gt; &lt;p&gt;Pastikan untuk memasukkan alamat website yang valid agar pelanggan dapat dengan mudah mengunjungi situs web bisnis Anda&lt;/p&gt;'>
-                            <i class="rlr-icon-font flaticon-information-button"> </i>
-                          </button>
+                            Website (opsional) </label>
+                          <input type="url" name="website" autocomplete="off" maxlength="70" id="rlr-product-form-product-title" class="form-control js-form-title" placeholder="e-tourism.com" />
                         </div>
                       </div>
                     </div>
@@ -848,35 +832,20 @@
                     <div class="rlr-fieldrow__item js-fieldrow__item">
                       <label class="rlr-form-label rlr-form-label--" for="rlr_input_splide_photouploader"> Foto Bisnis
                       </label>
-                      <div class="rlr-drop-region js-rlr-drop-region">
-                        <div class="rlr-drop-region__add-section">
-                          <input required id="rlr_input_splide_photouploader"
-                            class="rlr-drop-region__image-input js-rlr-drop-input" type="file" accept="image/*" />
-                          <svg width="48" height="48" viewBox="0 0 48 48" fill="none"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path
-                              d="M24 1.928c12.144 0 22.072 9.928 22.072 22.072 0 12.144-9.928 22.072-22.072 22.072-12.144 0-22.072-9.928-22.072-22.072C1.928 11.856 11.856 1.928 24 1.928zM24 0A23.94 23.94 0 0 0 0 24c0 13.302 10.794 24 24 24 13.204 0 24-10.698 24-24A23.94 23.94 0 0 0 24 0z"
-                              fill="#99A3AD" />
-                            <path d="M22.844 11.374h1.928v25.06h-1.928v-25.06z" fill="#99A3AD" />
-                            <path d="M11.18 23.132h24.868v1.928H11.18v-1.928z" fill="#99A3AD" />
-                          </svg>
-                          <div class="type-lead rlr-drop-region__add-section__text">Tambah Foto</div>
+                      <div class="upload-card">
+                        <div class="drag-area">
+                          <span class="visible">
+                            Drag & drop gambar disini atau 
+                            <span class="select-file" role="button">Pilih File</span>
+                          </span>
+                          <span class="on-drop">Jatuhkan gambar disini</span>
+                          <input name="file[]" type="file" class="file" multiple />
                         </div>
-                      </div>
-                      <div class="splide rlr-view-region" id="rlr_js_splide_photouploader">
-                        <div class="splide__track rlr-view-region__strack">
-                          <ul id="image-preview" class="splide__list"></ul>
+
+                        <!-- IMAGE PREVIEW CONTAINER -->
+                        <div class="upload-container">
+
                         </div>
-                      </div>
-                      <div class="rlr-view-input rlr-view-input--js-hide js-rlr-view-input">
-                        <span class="rlr-view-input__submit js-label-submit">
-                          <svg width="14" height="12" viewBox="0 0 14 12" fill="none"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path
-                              d="M5.394 11.123a.698.698 0 0 1-.99 0L.45 7.17a1.05 1.05 0 0 1 0-1.485l.495-.495a1.05 1.05 0 0 1 1.486 0l2.468 2.468 6.67-6.67a1.05 1.05 0 0 1 1.485 0l.495.496c.41.41.41 1.075 0 1.485l-8.155 8.155z"
-                              fill="var(--white)" />
-                          </svg>
-                        </span>
                       </div>
                     </div>
                   </div>
@@ -892,44 +861,42 @@
                 <div class="rlr-fieldrow__item js-fieldrow__item mt-4">
                   <label class="rlr-form-label rlr-form-label--dark" for="rlr-product-form-tour-select"> Provinsi
                   </label>
-                  <select required id="rlr-product-form-tour-select" class="form-select rlr-form-select">
+                  <select required id="provinsi" name="provinsi" class="form-select rlr-form-select">
                     <option value="" disabled="disabled" selected="selected">Pilih Provinsi</option>
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
                   </select>
                 </div>
 
                 <div class="rlr-fieldrow__item js-fieldrow__item mt-4">
                   <label class="rlr-form-label rlr-form-label--dark" for="rlr-product-form-tour-select"> Kabupaten
                   </label>
-                  <select required id="rlr-product-form-tour-select" class="form-select rlr-form-select">
+                  <select required id="kabupaten" name="kabupaten" class="form-select rlr-form-select">
                     <option value="" disabled="disabled" selected="selected">Pilih Kabupaten</option>
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
                   </select>
                 </div>
 
+                <div class="rlr-fieldrow__item js-fieldrow__item mt-4">
+                  <label class="rlr-form-label rlr-form-label--dark" for="rlr-product-form-tour-select"> Kecamatan </label>
+                  <select required id="kecamatan" name="kecamatan" class="form-select rlr-form-select">
+                    <option value="" disabled="disabled" selected="selected">Pilih Kecamatan</option>
+                  </select>
+                </div>
 
                 <div class="rlr-fieldrow__item js-fieldrow__item mt-4">
                   <label class="rlr-form-label rlr-form-label--dark" for="rlr-product-form-tour-select"> Desa </label>
-                  <select required id="rlr-product-form-tour-select" class="form-select rlr-form-select">
+                  <select required id="desa" name="desa" class="form-select rlr-form-select">
                     <option value="" disabled="disabled" selected="selected">Pilih Desa</option>
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
                   </select>
                 </div>
+
                 <div class="rlr-fieldrow">
                   <div class="rlr-fieldrow__form-element">
                     <div class="rlr-fieldrow__item js-fieldrow__item">
                       <label class="rlr-form-label rlr-form-label--dark" for="rlr-product-form-start-point"> Masukkan
                         Alamat </label>
-                      <input type="text" autocomplete="off" required maxlength="70" id="rlr-product-form-start-point"
-                        class="form-control" placeholder="Jalan Uluwatu No 66X" />
-                      <div class="rlr-fieldrow__map">
-                        <img src="../assets/images/google-map.jpg" alt="#" />
+                      <input type="text" autocomplete="off" required id="alamat" name="alamat" class="form-control" placeholder="Jl. Uluwatu No 66X" />
+                      <input type="hidden" id="lat" name="lat" value="">
+                      <input type="hidden" id="lng" name="lng" value="">
+                      <div class="rlr-fieldrow__map" id="map">
                       </div>
                     </div>
                   </div>
@@ -948,20 +915,16 @@
                   <div class="rlr-fieldrow__form-element">
                     <div class="rlr-fieldrow__item rlr-fieldrow__item--multiple">
                       <div class="rlr-fieldrow__options"><label class="rlr-form-label rlr-form-label--dark"> Masukkan
-                          layanan yang disediakan </label> <input type="text" autocomplete="off" maxlength="70"
-                          class="form-control" placeholder="Deskripsi singkat mengenai layanan yang disediakan" /></div>
+                          layanan yang disediakan </label> <input type="text" autocomplete="off" maxlength="70" class="form-control" name="layanan-disediakan[]" placeholder="Deskripsi singkat mengenai layanan yang disediakan" /></div>
                     </div>
-                    <button type="button"
-                      class="btn rlr-button text-button rlr-button--product-form-repeater js-repeater rlr-button--small rlr-button--rounded rlr-button--gray rlr-button--transparent">+
+                    <button type="button" class="btn rlr-button text-button rlr-button--product-form-repeater js-repeater rlr-button--small rlr-button--rounded rlr-button--gray rlr-button--transparent">+
                       Tambah layanan yang disediakan</button>
                     <div class="rlr-fieldrow__item rlr-fieldrow__item--multiple">
                       <div class="rlr-fieldrow__options"><label class="rlr-form-label rlr-form-label--dark"> Masukkan
-                          layanan yang tidak disediakan </label> <input type="text" autocomplete="off" maxlength="70"
-                          class="form-control" placeholder="Deskripsi singkat mengenai layanan yang tidak disediakan" />
+                          layanan yang tidak disediakan </label> <input type="text" autocomplete="off" maxlength="70" class="form-control" name="layanan-tidak-disediakan[]" placeholder="Deskripsi singkat mengenai layanan yang tidak disediakan" />
                       </div>
                     </div>
-                    <button type="button"
-                      class="btn rlr-button text-button rlr-button--product-form-repeater js-repeater rlr-button--small rlr-button--rounded rlr-button--gray rlr-button--transparent">+
+                    <button type="button" class="btn rlr-button text-button rlr-button--product-form-repeater js-repeater rlr-button--small rlr-button--rounded rlr-button--gray rlr-button--transparent">+
                       Masukkan layanan yang tidak disediakan</button>
                   </div>
                 </div>
@@ -978,18 +941,13 @@
                   <div class="rlr-fieldrow__form-element">
                     <div class="rlr-fieldrow__item rlr-fieldrow__item--multiple">
                       <div class="rlr-fieldrow__options js-fieldrow__item">
-                        <label class="rlr-form-label rlr-form-label--dark"> Pertanyaan </label> <input type="text"
-                          autocomplete="off" required maxlength="70" class="form-control"
-                          placeholder="Masukkan pertanyaan yang sering diajukan" />
+                        <label class="rlr-form-label rlr-form-label--dark"> Pertanyaan </label> <input type="text" autocomplete="off" required maxlength="70" class="form-control" name="pertanyaan[]" placeholder="Masukkan pertanyaan yang sering diajukan" />
                       </div>
                       <div class="rlr-fieldrow__options js-fieldrow__item">
-                        <label class="rlr-form-label rlr-form-label--dark"> Jawaban </label> <textarea required
-                          class="form-control form-control--text-area"
-                          placeholder="Masukkan jawaban singkat dari pertanyaan tersebut." rows="12"></textarea>
+                        <label class="rlr-form-label rlr-form-label--dark"> Jawaban </label> <textarea required class="form-control form-control--text-area" name="jawaban[]" placeholder="Masukkan jawaban singkat dari pertanyaan tersebut." rows="12"></textarea>
                       </div>
                     </div>
-                    <button type="button"
-                      class="btn rlr-button text-button rlr-button--product-form-repeater js-repeater rlr-button--small rlr-button--rounded rlr-button--gray rlr-button--transparent">+
+                    <button type="button" class="btn rlr-button text-button rlr-button--product-form-repeater js-repeater rlr-button--small rlr-button--rounded rlr-button--gray rlr-button--transparent">+
                       Tambah FAQ</button>
                   </div>
                 </div>
@@ -1000,6 +958,7 @@
                   <h2 class="rlr-section__heading--main">Pratinjau dan Publikasikan</h2>
                   <span class="rlr-section__heading--sub">Pastikan seluruh informasi yang Anda masukkan sudah benar dan
                     lengkap sebelum dipublikasikan.</span>
+                  <input id="sbmtbtn" type="submit" value="Submit">
                 </div>
               </fieldset>
             </form>
@@ -1077,8 +1036,13 @@
     </div>
   </footer>
   <!-- Scripts -->
+  <script src="../vendors/jquery.min.js"></script>
   <script src="../vendors/navx/js/navigation.min.js" defer></script>
   <script src="../js/main.js" defer></script>
+  <script src="../js/wilayah.js" defer></script>
+  <script src="../js/upload.js"></script>
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+
 </body>
 
 </html>
