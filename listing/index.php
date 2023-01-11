@@ -2,36 +2,60 @@
 include '../src/conn.php';
 include '../src/Business.php';
 include '../src/BusinessService.php';
+include '../src/Pengguna.php';
 include '../src/BusinessPhoto.php';
 include '../src/Service.php';
 include '../src/Review.php';
 include '../src/ReviewPhoto.php';
 include '../src/FAQ.php';
 include '../src/Place.php';
+include '../src/Wishlist.php';
 
 session_start();
 
+$pengguna = new Pengguna($conn);
+$user = [];
 if (isset($_SESSION['user_id'])) {
-  $stmt = $conn->prepare('SELECT * FROM pengguna WHERE id_pengguna = ?');
-  $stmt->execute([$_SESSION['user_id']]);
-  $user = $stmt->fetch();
+  $user = $pengguna->read($_SESSION['user_id']);
 }
 
 if (isset($_GET['id'])) {
   $business_service = new BusinessService($conn);
-} else if (!isset($_GET['id']) || empty($business)) {
+  $business = $business_service->getBusinessById($_GET['id']);
+}
+
+if (!isset($_GET['id']) || empty($business)) {
   header('HTTP/1.1 404 Not Found');
   include '../404.html'; //need to fix
   exit();
 }
 
 $business = $business_service->getBusinessById($_GET['id']);
+
+if (!isset($user['level']) && $business->status !== 'disetujui') {
+  header('HTTP/1.1 404 Not Found');
+  include '../404.html'; //need to fix
+  exit();
+} else if ($business->status !== 'disetujui' && $user['level'] == 'pengguna') {
+  header('HTTP/1.1 404 Not Found');
+  include '../404.html'; //need to fix
+  exit();
+} else {
+  if (isset($user['level']) && $business->status !== 'disetujui' && $business_service->getBusinessByUserId($user['id_pengguna'])->idBisnis === $business->idBisnis) {
+    $isNotActive = 'true';
+  }
+}
+
+
 $photos = new BusinessPhoto($conn);
 $services = new Service($conn);
 $reviews = new Review($conn);
 $reviewphotos = new ReviewPhoto($conn);
 $faqs = new FAQ($conn);
 $place = new Place($conn);
+$wishlist = new Wishlist($conn);
+
+$neighbours = $place->getNearestBusinessesByLocation($place->getPlaceById($business->idDesa)['id_kabupaten'], 'kabupaten')
 ?>
 
 <!DOCTYPE html>
@@ -39,7 +63,8 @@ $place = new Place($conn);
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="description" content="Your vacation, tours and travel theme needs are all met at E-Tourism." />
+  <meta name="description" content="Temukan objek wisata, akomodasi, serta makanan dan minuman terbaik di E-Tourism. Kami membantu Anda menemukan pengalaman wisata terbaik di seluruh dunia dengan menyediakan ulasan dan rekomendasi dari para traveler sejati. Jelajahi destinasi wisata populer atau cari inspirasi untuk liburan selanjutnya di E-Tourism." />
+  <meta name="keywords" content="objek wisata, akomodasi, f&b, makanan dan minuman, rekomendasi wisata, ulasan wisata, destinasi wisata.">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><?= $business->nama ?> - E-Tourism</title>
   <!-- Favicon -->
@@ -113,7 +138,7 @@ $place = new Place($conn);
             </ul>
           </li>
           <li class="navigation-item">
-            <a class="navigation-link" href="../home-page.html">Kategori</a>
+            <a class="navigation-link" href="../search/?kategori=1,2,3">Kategori</a>
             <ul class="navigation-dropdown">
               <li class="navigation-dropdown-item">
                 <a class="navigation-dropdown-link" href="../search/?kategori=1">Akomodasi</a>
@@ -130,38 +155,57 @@ $place = new Place($conn);
             <a class="navigation-link" href="../blog"> Blog </a>
           </li>
         </ul>
-        <!-- User actions menu -->
         <ul class="navigation-menu rlr-navigation__menu align-to-right">
-          <!-- Add your listing -->
           <li class="d-lg-none d-xxl-block navigation-item">
-            <a class="navigation-link rlr-navigation__link--so" target="_blank" href="../new-listing/">Daftarkan
-              Bisnis</a>
+            <? if ($user['level'] === 'admin') : ?>
+              <a class="navigation-link rlr-navigation__link--so" target="_blank" href="../dashboard/admin">Dashboard Admin</a>
+            <? elseif ($user['level'] === 'bisnis') : ?>
+              <a class="navigation-link rlr-navigation__link--so" target="_blank" href="../dashboard/business">Dashboard Bisnis</a>
+            <? else : ?>
+              <a class="navigation-link rlr-navigation__link--so" target="_blank" href="../manage-listing/">Daftarkan Bisnis</a>
+            <? endif; ?>
           </li>
-          <!-- User account dropdown -->
           <li class="navigation-item">
-            <a class="navigation-link" href="#"> <?= isset($_SESSION['user_id']) ? $user['nama'] : 'Guest' ?> <img class="ui right spaced rlr-avatar rlr-avatar__media--rounded" style="height: 32px; width: 32px;" src="https://static.wikia.nocookie.net/inconsistently-heinous/images/e/e0/Saul_2009.jpg" alt="account avatar" /> </a>
+            <a class="navigation-link" href="#"> <?= isset($_SESSION['user_id']) ? $user['nama'] : 'Guest' ?>
+              <? if ($user && !is_null($user['avatar'])) : ?>
+                <img class="ui right spaced rlr-avatar rlr-avatar__media--rounded" style="height: 32px; width: 32px;" src="../assets/images/avatar/<?= $user['avatar'] ?>" alt="account avatar" /> </a>
+          <? else : ?>
+            <div style="align-items: center; display: flex; justify-content: center; background-color: var(--brand); color: #fff; border-radius: 50%; height: 3rem; width: 3rem;">
+              <?php
+                $initials = "";
+                $name_parts = explode(" ",  $user['nama'] ?? 'Guest');
+                $i = 0;
+                foreach ($name_parts as $part) {
+                  if ($i < 2) {
+                    $initials .= strtoupper(substr($part, 0, 1));
+                  }
+                  $i++;
+                }
+              ?>
+              <span><?= $initials ?></span>
+            </div>
+          <? endif; ?>
+          <ul class="navigation-dropdown">
 
-            <ul class="navigation-dropdown">
-
-              <?php if (isset($_SESSION['user_id'])) : ?>
-                <li class="navigation-dropdown-item">
-                  <a class="navigation-dropdown-link" href="../profile">Akun saya</a>
-                </li>
-                <li class="navigation-dropdown-item">
-                  <a class="navigation-dropdown-link" href="../wishlist">Wishlist</a>
-                </li>
-                <li class="navigation-dropdown-item">
-                  <hr class="dropdown-divider rlr-dropdown__divider" />
-                </li>
-                <li class="navigation-dropdown-item">
-                  <a class="navigation-dropdown-link" href="../logout/">Keluar</a>
-                </li>
-              <? else : ?>
-                <li class="navigation-dropdown-item">
-                  <a class="navigation-dropdown-link" href="../login/">Login</a>
-                </li>
-              <? endif; ?>
-            </ul>
+            <?php if (isset($_SESSION['user_id'])) : ?>
+              <li class="navigation-dropdown-item">
+                <a class="navigation-dropdown-link" href="../profile">Akun saya</a>
+              </li>
+              <li class="navigation-dropdown-item">
+                <a class="navigation-dropdown-link" href="../wishlist">Wishlist</a>
+              </li>
+              <li class="navigation-dropdown-item">
+                <hr class="dropdown-divider rlr-dropdown__divider" />
+              </li>
+              <li class="navigation-dropdown-item">
+                <a class="navigation-dropdown-link" href="../logout/">Keluar</a>
+              </li>
+            <? else : ?>
+              <li class="navigation-dropdown-item">
+                <a class="navigation-dropdown-link" href="../login/">Login</a>
+              </li>
+            <? endif; ?>
+          </ul>
 
           </li>
         </ul>
@@ -205,7 +249,7 @@ $place = new Place($conn);
               <svg width="18" height="14" viewBox="0 0 18 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M1.2 0C.542 0 0 .558 0 1.235v11.53C0 13.442.542 14 1.2 14h15.6c.658 0 1.2-.558 1.2-1.235V1.235C18 .558 17.458 0 16.8 0H1.2zm0 .824h15.6c.228 0 .4.176.4.411v9.844l-3.506-3.95a.4.4 0 0 0-.588 0l-2.862 3.126L6.1 5.488a.4.4 0 0 0-.362-.135.4.4 0 0 0-.232.129L.8 10.687V1.235C.8 1 .972.823 1.2.823zm9.2 2.058c-.879 0-1.6.743-1.6 1.647 0 .905.721 1.647 1.6 1.647.879 0 1.6-.742 1.6-1.647 0-.904-.721-1.647-1.6-1.647zm0 .824c.447 0 .8.363.8.823 0 .46-.353.824-.8.824a.806.806 0 0 1-.8-.824c0-.46.353-.823.8-.823zm-4.606 2.67 5.912 6.8H1.2a.397.397 0 0 1-.4-.411v-.869l4.994-5.52zm7.6 1.64 3.806 4.285v.464a.397.397 0 0 1-.4.411h-4.019l-2-2.303 2.613-2.856z" fill="#212529"></path>
               </svg>
-              <span class="rlr-media__page-counter rlr-js-page"> 0 </span>
+              <span class="rlr-media__page-counter rlr-js-page"> <?= count($photos->read($business->idBisnis)) ?> </span>
             </div>
           </div>
         </div>
@@ -280,30 +324,18 @@ $place = new Place($conn);
               </button>
               <div id="rlr-js-share-popover" class="rlr-popover--hide">
                 <div class="rlr-share">
-                  <h3 class="rlr-share__title">Share with a friend</h3>
+                  <h3 class="rlr-share__title">Bagikan</h3>
                   <ul class="rlr-share__items">
-                    <li class="rlr-share__list rlr-js--facebook">
-                      <a href="#" class="rlr-icon-text rlr-icon-text--anchor rlr-icon-text__block rlr-share__item"> <i class="rlr-icon-font flaticon-facebook"> </i> <span class="rlr-share__title">Facebook </span>
-                      </a>
-                    </li>
                     <li class="rlr-share__list rlr-js--twitter">
-                      <a href="#" class="rlr-icon-text rlr-icon-text--anchor rlr-icon-text__block rlr-share__item"> <i class="rlr-icon-font flaticon-twitter"> </i> <span class="rlr-share__title">Twitter </span>
-                      </a>
-                    </li>
-                    <li class="rlr-share__list rlr-js--reddit">
-                      <a href="#" class="rlr-icon-text rlr-icon-text--anchor rlr-icon-text__block rlr-share__item"> <i class="rlr-icon-font flaticon-instagram"> </i> <span class="rlr-share__title">Reddit </span>
+                      <a href="http://twitter.com/share?text=Lihat tujuan wisata ini&url=<?= "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]" ?>&hashtags=tourism,pariwisata" class="rlr-icon-text rlr-icon-text--anchor rlr-icon-text__block rlr-share__item"> <i class="rlr-icon-font flaticon-twitter"> </i> <span class="rlr-share__title">Twitter </span>
                       </a>
                     </li>
                     <li class="rlr-share__list rlr-js--whatsapp">
-                      <a href="#" class="rlr-icon-text rlr-icon-text--anchor rlr-icon-text__block rlr-share__item"> <i class="rlr-icon-font flaticon-whatsapp"> </i> <span class="rlr-share__title">Whatsapp </span>
+                      <a href="whatsapp://send?text=Lihat tujuan wisata ini: <?= "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]" ?>" class="rlr-icon-text rlr-icon-text--anchor rlr-icon-text__block rlr-share__item"> <i class="rlr-icon-font flaticon-whatsapp"> </i> <span class="rlr-share__title">Whatsapp </span>
                       </a>
                     </li>
-                    <li class="rlr-share__list rlr-js--messenger">
-                      <a href="#" class="rlr-icon-text rlr-icon-text--anchor rlr-icon-text__block rlr-share__item"> <i class="rlr-icon-font flaticon-messenger"> </i> <span class="rlr-share__title">Messenger
-                        </span> </a>
-                    </li>
                     <li class="rlr-share__list rlr-js--email">
-                      <a href="#" class="rlr-icon-text rlr-icon-text--anchor rlr-icon-text__block rlr-share__item"> <i class="rlr-icon-font flaticon-email-1"> </i> <span class="rlr-share__title">Email </span> </a>
+                      <a href="mailto:?subject=Lihat tujuan wisata ini&amp;body=Kunjungi websitenya <?= "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]" ?>" class="rlr-icon-text rlr-icon-text--anchor rlr-icon-text__block rlr-share__item"> <i class="rlr-icon-font flaticon-email-1"> </i> <span class="rlr-share__title">Email </span> </a>
                     </li>
                   </ul>
                   <div class="rlr-copylink">
@@ -316,9 +348,12 @@ $place = new Place($conn);
                 </div>
               </div>
               <div class="rlr-product-detail-header__button-wrapper">
-                <button type="button" id="wishlistBtn" class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button rlr-js-action-wishlist" aria-label="Save to Wishlist">
-                  <i class="rlr-icon-font flaticon-heart-1"> </i>
-                </button>
+
+                <? if (isset($user['id_pengguna'])) : ?>
+                  <button type="button" id="<?= $business->idBisnis ?>" class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button rlr-js-action-wishlist  <?= $wishlist->isWishlist($user['id_pengguna'], $business->idBisnis) ? 'is-active' : '' ?>" aria-label="Save to Wishlist">
+                    <i class="rlr-icon-font flaticon-heart-1"> </i>
+                  </button>
+                <? endif; ?>
                 <span class="rlr-product-detail-header__helptext rlr-js-helptext"></span>
               </div>
             </div>
@@ -353,9 +388,20 @@ $place = new Place($conn);
               <div class="rlr-overview-detail">
                 <div class="rlr-readmore-desc rlr-overview-detail__description">
                   <p class="rlr-readmore-desc__content rlr-js-desc">
-                    <?= $business->deskripsi ?>
-                  </p>
-                  <span class="rlr-readmore-desc__readmore rlr-js-readmore">Selengkapnya...</span>
+
+                    <?
+                    $admin_message = $business_service->readRejectedBusinessListing($business->idBisnis);
+                    if (isset($isNotActive) && $isNotActive) : ?>
+                  <div class="pending-message-wrapper mb-5 px-4 py-3" style="width: 100%; border-radius: 12px; border-color: #FF9700; background-color: #FF9700; color: #ffffff;">
+                    <h3 class="rlr-section__heading--main mb-2"><?= $business->status == 'pending' ? 'Bisnis belum aktif' : 'Bisnis ditolak' ?></h3>
+                    <h5 class="rlr-section__heading--sub"><?= $business->status == 'pending' ? 'Bisnis Anda sedang menunggu persetujuan Admin.' : 'Bisnis ditolak.' ?> <?= $admin_message ? ' Alasan: ' . $admin_message[0]['alasan'] : '' ?></h5>
+                  </div>
+                <? endif; ?>
+
+                <?= $business->deskripsi ?>
+                </p>
+
+                <span class="rlr-readmore-desc__readmore rlr-js-readmore">Selengkapnya...</span>
                 </div>
               </div>
             </div>
@@ -388,10 +434,10 @@ $place = new Place($conn);
                 <? endforeach; ?>
 
                 <!-- Exclusion -->
-                <? foreach ($services->readUnavailable($business->idBisnis) as $reviewnavailable) : ?>
+                <? foreach ($services->readUnavailable($business->idBisnis) as $unavailable) : ?>
                   <li class="rlr-icon-text rlr-secondary-menu-desc__list">
                     <i class="rlr-icon-font flaticon-cross-rounded"></i>
-                    <span class="rlr-icon-text__text"><?= $reviewnavailable['layanan'] ?></span>
+                    <span class="rlr-icon-text__text"><?= $unavailable['layanan'] ?></span>
                   </li>
                 <? endforeach; ?>
               </ul>
@@ -412,24 +458,40 @@ $place = new Place($conn);
                   <i class="rlr-icon-font flaticon-star-1 m-0" style="font-size: 1.5rem;"> </i>
                   <h1 class="rlr-section__heading--main rlr-product-detail-header__title m-0" style="font-size: 1.5rem;"><?= round($reviews->getAverageRatingById($business->idBisnis), 1) ?> · <?= $reviews->getTotalReviewsById($business->idBisnis) ?> ulasan</h1>
                 </div>
-                <button type="button" class="btn btn-add-review rlr-button rlr-button--gray-00 text-black px-4 py-2" style="border: 0.1px solid lightgray; border-radius: 8px;" id="addReviewModalBtn">Tambah
-                  ulasan</button>
+                <? if (isset($user['level']) && $user['level'] === 'pengguna') : ?>
+                  <button type="button" class="btn btn-add-review rlr-button rlr-button--gray-00 text-black px-4 py-2" style="border: 0.1px solid lightgray; border-radius: 8px;" id="addReviewModalBtn">Tambah
+                    ulasan</button>
+                <? endif; ?>
               </div>
               <!-- Review -->
 
               <?
-              foreach ($reviews->read($business->idBisnis, 0, 3, null, null, 'latest') as $review) :
-                $stmt = $conn->prepare('SELECT * FROM pengguna WHERE id_pengguna = ?'); // todo: buat class pengguna
-                $stmt->execute([$review['id_pengguna']]);
-                $pengulas = $stmt->fetch();
+              foreach ($reviews->read($business->idBisnis, 0, 3, null, null, 'Ulasan terbaru') as $review) :
+                $pengulas = $pengguna->read($review['id_pengguna']);
               ?>
 
                 <article class="rlr-review-card my-3" itemscope itemtype="https://schema.org/Product">
                   <div class="rlr-review-card__contact">
                     <!--Using in Components -->
                     <div class="rlr-avatar d-flex">
-                      <img class="rlr-avatar__media--rounded" src="<?= $pengulas['avatar'] ?>" itemprop="avatar" alt="avatar icon" />
-
+                      <? if ($pengulas && !is_null($pengulas['avatar'])) : ?>
+                        <img class="rlr-avatar__media--rounded" src="../assets/images/avatar/<?= $pengulas['avatar'] ?>" itemprop="avatar" alt="avatar icon" />
+                      <? else : ?>
+                        <div style="align-items: center; display: flex; justify-content: center; background-color: var(--brand); color: #fff; border-radius: 50%; height: 56px; width: 56px;">
+                          <?php
+                          $initials = "";
+                          $name_parts = explode(" ",  $pengulas['nama']);
+                          $i = 0;
+                          foreach ($name_parts as $part) {
+                            if ($i < 2) {
+                              $initials .= strtoupper(substr($part, 0, 1));
+                            }
+                            $i++;
+                          }
+                          ?>
+                          <span><?= $initials ?></span>
+                        </div>
+                      <? endif; ?> </a>
                       <div class="d-flex flex-column ml-2">
                         <span class="rlr-avatar__name" style="font-weight: 500;" itemprop="name"><?= $pengulas['nama'] ?></span>
                         <span class="rlr-avatar__name" style="font-weight: 300; font-size: 90%" itemprop="date"><?= $review['waktu'] ?></span>
@@ -451,6 +513,7 @@ $place = new Place($conn);
                   <div class="rlr-review-card__details">
                     <div class="rlr-review-card__title gap-4">
                       <h3 class="rlr-review-card__title-review"><?= $review['judul'] ?></h3>
+                      <? if (isset($user['level'])) : ?>
                       <span class="rlr-svg-icon button-report-review" data-id-ulasan="<?= $review['id_ulasan'] ?>">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#000000">
                           <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
@@ -459,8 +522,9 @@ $place = new Place($conn);
                           </g>
                         </svg>
                       </span>
+                      <? endif; ?>
                     </div>
-                    <div class="rlr-review-card__comments" itemprop="review description">
+                    <div class="rlr-review-card__comments mb-4" itemprop="review description">
                       <div class="rlr-readmore-desc">
                         <p class="rlr-readmore-desc__content rlr-js-desc"><?= $review['komentar'] ?></p>
                         <span class="rlr-readmore-desc__readmore rlr-js-readmore">Selengkapnya...</span>
@@ -486,12 +550,61 @@ $place = new Place($conn);
                         <? endif; ?>
                       </div>
                     </div>
+                    <? if (!$reviews->readBusinessReply($review['id_ulasan']) && isset($user['level']) && $user['level'] === "bisnis" && $business_service->getBusinessByUserId($user['id_pengguna'])->idBisnis === $business->idBisnis) : ?>
+                      <a class="rlr-readmore-desc__content rlr-js-desc description-url" data-id-ulasan="<?= $review['id_ulasan'] ?>" data-id-bisnis="<?= $business->idBisnis ?>" id="replyReviewModalBtn">Balas ulasan</a>
+                    <? endif ?>
                   </div>
                 </article>
+
+                <?
+                $pemilik = $pengguna->read($business->idPengguna);
+                $balasan = $reviews->readBusinessReply($review['id_ulasan']);
+                if ($balasan) : ?>
+                  <article class="rlr-review-card my-3 ms-5" itemscope itemtype="https://schema.org/Product">
+                    <div class="rlr-review-card__contact">
+                      <!--Using in Components -->
+                      <div class="rlr-avatar d-flex ">
+                        <? if (!is_null($pemilik['avatar'])) : ?>
+                          <img class="rlr-avatar__media--rounded" src="../assets/images/avatar/<?= $pemilik['avatar'] ?>" itemprop="avatar" alt="avatar icon" />
+                        <? else : ?>
+                          <div style="align-items: center; display: flex; justify-content: center; background-color: var(--brand); color: #fff; border-radius: 50%; height: 56px; width: 56px;">
+                            <?php
+                            $initials = "";
+                            $name_parts = explode(" ",  $pemilik['nama']);
+                            $i = 0;
+                            foreach ($name_parts as $part) {
+                              if ($i < 2) {
+                                $initials .= strtoupper(substr($part, 0, 1));
+                              }
+                              $i++;
+                            }
+                            ?>
+                            <span><?= $initials ?></span>
+                          </div>
+                        <? endif; ?> </a>
+                        <div class="d-flex flex-column ml-2">
+                          <span class="rlr-avatar__name" style="font-weight: 500;" itemprop="name">Balasan dari <?= $pemilik['nama'] ?></span>
+                          <span class="rlr-avatar__name" style="font-weight: 300; font-size: 90%" itemprop="date">Pengelola <?= $business->nama ?></span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="rlr-review-card__details">
+                      <div class="rlr-review-card__title gap-4">
+                        <h3 class="rlr-review-card__title-review"><?= $balasan['judul'] ?></h3>
+                      </div>
+                      <div class="rlr-review-card__comments mb-4" itemprop="review description">
+                        <div class="rlr-readmore-desc">
+                          <p class="rlr-readmore-desc__content rlr-js-desc"><?= $balasan['komentar'] ?></p>
+                          <span class="rlr-readmore-desc__readmore rlr-js-readmore">Selengkapnya...</span>
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                <? endif; ?>
+
               <?
               endforeach;
               ?>
-              <!-- Pagination -->
               <div class="rlr-secondary-menu-desc__footer">
                 <button type="button" class="btn mb-3 rlr-button rlr-button--gray-00 text-black px-4 py-2" id="showReviewModalBtn" style="border: 0.1px solid lightgray; border-radius: 8px;">Tampilkan semua
                   ulasan</button>
@@ -622,361 +735,414 @@ $place = new Place($conn);
           </form>
         </aside>
       </section>
-      <!-- Similar Products -->
-      <section class="rlr-section rlr-section__mt rlr-related-product-wrapper">
-        <!-- Section heading -->
-        <div class="rlr-section-header">
+      <? if (count($neighbours) > 1) : ?>
+        <!-- Similar Products -->
+        <section class="rlr-section rlr-section__mt rlr-related-product-wrapper">
           <!-- Section heading -->
-          <div class="rlr-section__title">
-            <h2 class="rlr-section__title--main">Lainnya di <?= $place->getKabupatenNameById($place->getPlaceById($business->idDesa)['id_kabupaten']) ?></h2>
-            <span class="rlr-section__title--sub">Akomodasi, objek wisata, serta tempat makan dan minum lainnya yang dapat Anda
-              kunjungi</span>
-          </div>
-          <div class="button-row">
-            <a href="../search/?kabupaten=<?= $place->getPlaceById($business->idDesa)['id_kabupaten'] ?>" class="btn rlr-button rlr-button--large rlr-button--rounded rlr-button--brand"> Jelajahi </a>
-          </div>
-        </div>
-        <div class="row rlr-featured__cards">
-
-          <?
-          $count = 0;
-          foreach ($place->getNearestBusinessesByLocation($place->getPlaceById($business->idDesa)['id_kabupaten'], 'kabupaten') as $neighbour) :
-            $count++;
-            if ($neighbour['id_bisnis'] == $business->idBisnis) {
-              continue;
-            }
-            $category = $business_service->getCategoryByBusinessId($neighbour['id_bisnis']);
-
-            switch ($business_service->getCategoryByBusinessId($neighbour['id_bisnis'])['id_kategori']) {
-              case 1:
-                $categoryBadgeAccent = 'blue';
-                break;
-              case 2:
-                $categoryBadgeAccent = 'red';
-                break;
-              case 3:
-                $categoryBadgeAccent = 'black';
-                break;
-            }
-          ?>
-
-            <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-offset="250" data-aos-duration="700">
-              <article class="rlr-product-card rlr-product-card--v3" itemscope itemtype="https://schema.org/Product">
-                <figure class="rlr-product-card__image-wrapper">
-                  <span class="rlr-badge rlr-badge-- rlr-badge--accent-<?= $categoryBadgeAccent ?> rlr-product-card__badge"> <?= $category['nama'] ?> </span>
-                  <div class="rlr-product-detail-header__button-wrapper">
-                    <button type="button" class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button--light rlr-wishlist-button rlr-js-action-wishlist" aria-label="Save to Wishlist">
-                      <i class="rlr-icon-font flaticon-heart-1"> </i>
-                    </button>
-                    <span class="rlr-product-detail-header__helptext rlr-js-helptext"></span>
-                  </div>
-                  <a href="../listing/?id=<?= $neighbour['id_bisnis'] ?>">
-                    <div class="swiper rlr-js-product-multi-image-swiper">
-                      <div class="swiper-wrapper">
-                        <? foreach ($photos->read($neighbour['id_bisnis']) as $photo) : ?>
-                          <div class="swiper-slide">
-                            <img itemprop="image" data-sizes="auto" data-src="<?= $photo['url'] ?>" data-srcset="<?= $photo['url'] ?>" class="lazyload" alt="product-image" />
-                          </div>
-                        <? endforeach; ?>
-                      </div>
-                      <button type="button" class="btn rlr-button splide__arrow splide__arrow--prev" aria-label="prev button">
-                        <i class="rlr-icon-font flaticon-left-chevron"> </i>
-                      </button>
-                      <button type="button" class="btn rlr-button splide__arrow splide__arrow--next" aria-label="next button">
-                        <i class="rlr-icon-font flaticon-chevron"> </i>
-                      </button>
-                    </div>
-                  </a>
-                </figure>
-                <div class="rlr-product-card__detail-wrapper rlr-js-detail-wrapper">
-                  <!-- Product card header -->
-                  <header class="rlr-product-card__header">
-                    <div>
-                      <a href="../listing/?id=<?= $neighbour['id_bisnis'] ?>" class="rlr-product-card__anchor-title">
-                        <h2 class="rlr-product-card__title" itemprop="name"><?= $business_service->getBusinessById($neighbour['id_bisnis'])->nama ?></h2>
-                      </a>
-                      <div>
-                        <a href="../listing/?id=<?= $neighbour['id_bisnis'] ?>" class="rlr-product-card__anchor-cat">
-                          <span class="rlr-product-card__sub-title"><?= $business_service->getBusinessById($neighbour['id_bisnis'])->alamat ?></span>
-                        </a>
-                      </div>
-                    </div>
-                  </header>
-                  <!-- Product card body -->
-                  <div class="rlr-product-card__details">
-                    <div class="rlr-product-card__prices" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
-                      <span class="rlr-product-card__from"><?= $place->getKecamatanNameById($neighbour['id_kecamatan']) ?></span>
-                      <div class="rlr-icon-text rlr-product-card__icon-text"><span class=""><?= $place->getKabupatenNameById($neighbour['id_kabupaten']) ?></span></div>
-                    </div>
-                    <div class="rlr-product-card__ratings" itemprop="aggregateRating" itemscope itemtype="https://schema.org/AggregateRating">
-                      <div class="rlr-review-stars" itemprop="ratingValue" itemscope itemtype="https://schema.org/Product">
-                        <?
-                        $stars = round($reviews->getAverageRatingById($neighbour['id_bisnis']));
-                        for ($i = 0; $i < $stars; $i++) {
-                          echo '<i class="rlr-icon-font flaticon-star-1"></i>';
-                        }
-                        if ($stars < 5) {
-                          for ($i = 0; $i < 5 - $stars; $i++) {
-                            echo '<i class="rlr-icon-font flaticon-star"></i>';
-                          }
-                        }
-                        ?>
-                      </div>
-                      <span class="rlr-product-card__rating-text" itemprop="reviewCount"><?= round($reviews->getAverageRatingById($neighbour['id_bisnis']), 1) ?> (<?= $reviews->getTotalReviewsById($neighbour['id_bisnis'])  ?>)</span>
-                    </div>
-                  </div>
-                </div>
-              </article>
+          <div class="rlr-section-header">
+            <!-- Section heading -->
+            <div class="rlr-section__title">
+              <h2 class="rlr-section__title--main">Lainnya di <?= $place->getKabupatenNameById($place->getPlaceById($business->idDesa)['id_kabupaten']) ?></h2>
+              <span class="rlr-section__title--sub">Akomodasi, objek wisata, serta tempat makan dan minum lainnya yang dapat Anda
+                kunjungi</span>
             </div>
-          <?
-            if ($count == 3) break;
-          endforeach; ?>
+            <div class="button-row">
+              <a href="../search/?kabupaten=<?= $place->getPlaceById($business->idDesa)['id_kabupaten'] ?>" class="btn rlr-button rlr-button--large rlr-button--rounded rlr-button--brand"> Jelajahi </a>
+            </div>
+          </div>
+          <div class="row rlr-featured__cards">
 
-        </div>
-      </section>
-      <!-- Add Review Modal -->
-      <div id="addReviewModal" class="modal">
-        <!-- Modal content -->
-        <div class="modal-content">
-          <div id="rlr-review-from" class="container-xxxl">
-            <form action="addReview/" method="POST" enctype="multipart/form-data">
-              <section class="rlr-section rlr-section__content--md-top row justify-content-center my-0">
-                <div class="modal-header">
-                  <div class="rlr-section__heading py-4 px-3">
-                    <label class="rlr-form-label rlr-form-label--dark m-0" for="rlr_review_form_title"> Tulis Ulasan
-                    </label>
-                  </div>
-                </div>
-                <div class="col-xl-12">
-                  <fieldset class="rlr-product-form--show px-3">
-                    <legend class="rlr-review-form__hidden-legend">Tulis ulasan</legend>
-                    <!-- Section heading -->
-                    <div class="rlr-fieldrow">
-                      <div class="rlr-fieldrow_item my-2">
-                        <div class='rating-stars text-center'>
-                          <ul id='stars'>
-                            <li class='star' title='Poor' data-value='1'>
-                              <i class='rlr-icon-font flaticon-star-1'></i>
-                            </li>
-                            <li class='star' title='Fair' data-value='2'>
-                              <i class='rlr-icon-font flaticon-star-1'></i>
-                            </li>
-                            <li class='star' title='Good' data-value='3'>
-                              <i class='rlr-icon-font flaticon-star-1'></i>
-                            </li>
-                            <li class='star' title='Excellent' data-value='4'>
-                              <i class='rlr-icon-font flaticon-star-1'></i>
-                            </li>
-                            <li class='star' title='WOW!!!' data-value='5'>
-                              <i class='rlr-icon-font flaticon-star-1'></i>
-                            </li>
-                          </ul>
+            <?
+            $count = 0;
+            foreach ($neighbours as $neighbour) :
+              $count++;
+              if ($neighbour['id_bisnis'] == $business->idBisnis) {
+                continue;
+              }
+              $category = $business_service->getCategoryByBusinessId($neighbour['id_bisnis']);
+
+              switch ($business_service->getCategoryByBusinessId($neighbour['id_bisnis'])['id_kategori']) {
+                case 1:
+                  $categoryBadgeAccent = 'blue';
+                  break;
+                case 2:
+                  $categoryBadgeAccent = 'red';
+                  break;
+                case 3:
+                  $categoryBadgeAccent = 'black';
+                  break;
+              }
+            ?>
+
+              <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-offset="250" data-aos-duration="700">
+                <article class="rlr-product-card rlr-product-card--v3" itemscope itemtype="https://schema.org/Product">
+                  <figure class="rlr-product-card__image-wrapper">
+                    <span class="rlr-badge rlr-badge-- rlr-badge--accent-<?= $categoryBadgeAccent ?> rlr-product-card__badge"> <?= $category['nama'] ?> </span>
+                    <div class="rlr-product-detail-header__button-wrapper">
+                      <? if (isset($user['id_pengguna'])) : ?>
+                        <button id="<?= $neighbour['id_bisnis'] ?>" type="button" class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button--light rlr-wishlist-button rlr-js-action-wishlist <?= $wishlist->isWishlist($user['id_pengguna'], $neighbour['id_bisnis']) ? 'is-active' : '' ?>" aria-label="Save to Wishlist">
+                        <? endif; ?>
+                        <i class="rlr-icon-font flaticon-heart-1"> </i>
+                        </button>
+                        <span class="rlr-product-detail-header__helptext rlr-js-helptext"></span>
+                    </div>
+                    <a href="../listing/?id=<?= $neighbour['id_bisnis'] ?>">
+                      <div class="swiper rlr-js-product-multi-image-swiper">
+                        <div class="swiper-wrapper">
+                          <? foreach ($photos->read($neighbour['id_bisnis']) as $photo) : ?>
+                            <div class="swiper-slide">
+                              <img itemprop="image" style="height: 200px; object-fit:cover" data-sizes="auto" data-src="../assets/images/listings/<?= $photo['filename'] ?>" data-srcset="../assets/images/listings/<?= $photo['filename'] ?>" class="lazyload" alt="product-image" />
+                            </div>
+                          <? endforeach; ?>
                         </div>
-                        <input type="hidden" name="rating" id="rating" value="">
-                        <input type="hidden" name="id_bisnis" value="<?= $business->idBisnis ?>">
+                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--prev" aria-label="prev button">
+                          <i class="rlr-icon-font flaticon-left-chevron"> </i>
+                        </button>
+                        <button type="button" class="btn rlr-button splide__arrow splide__arrow--next" aria-label="next button">
+                          <i class="rlr-icon-font flaticon-chevron"> </i>
+                        </button>
                       </div>
+                    </a>
+                  </figure>
+                  <div class="rlr-product-card__detail-wrapper rlr-js-detail-wrapper">
+                    <!-- Product card header -->
+                    <header class="rlr-product-card__header">
+                      <div>
+                        <a href="../listing/?id=<?= $neighbour['id_bisnis'] ?>" class="rlr-product-card__anchor-title">
+                          <h2 class="rlr-product-card__title" itemprop="name"><?= $business_service->getBusinessById($neighbour['id_bisnis'])->nama ?></h2>
+                        </a>
+                        <div>
+                          <a href="../listing/?id=<?= $neighbour['id_bisnis'] ?>" class="rlr-product-card__anchor-cat">
+                            <span class="rlr-product-card__sub-title"><?= $business_service->getBusinessById($neighbour['id_bisnis'])->alamat ?></span>
+                          </a>
+                        </div>
+                      </div>
+                    </header>
+                    <!-- Product card body -->
+                    <div class="rlr-product-card__details">
+                      <div class="rlr-product-card__prices" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+                        <span class="rlr-product-card__from"><?= $place->getKecamatanNameById($neighbour['id_kecamatan']) ?></span>
+                        <div class="rlr-icon-text rlr-product-card__icon-text"><span class=""><?= $place->getKabupatenNameById($neighbour['id_kabupaten']) ?></span></div>
+                      </div>
+                      <div class="rlr-product-card__ratings" itemprop="aggregateRating" itemscope itemtype="https://schema.org/AggregateRating">
+                        <div class="rlr-review-stars" itemprop="ratingValue" itemscope itemtype="https://schema.org/Product">
+                          <?
+                          $stars = round($reviews->getAverageRatingById($neighbour['id_bisnis']));
+                          for ($i = 0; $i < $stars; $i++) {
+                            echo '<i class="rlr-icon-font flaticon-star-1"></i>';
+                          }
+                          if ($stars < 5) {
+                            for ($i = 0; $i < 5 - $stars; $i++) {
+                              echo '<i class="rlr-icon-font flaticon-star"></i>';
+                            }
+                          }
+                          ?>
+                        </div>
+                        <span class="rlr-product-card__rating-text" itemprop="reviewCount"><?= round($reviews->getAverageRatingById($neighbour['id_bisnis']), 1) ?> (<?= $reviews->getTotalReviewsById($neighbour['id_bisnis'])  ?>)</span>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            <?
+              if ($count == 3) break;
+            endforeach; ?>
+
+          </div>
+        </section>
+      <? endif; ?>
+
+      <? if (isset($user['level']) && $user['level'] === "bisnis" && $business_service->getBusinessByUserId($user['id_pengguna'])->idBisnis === $business->idBisnis) : ?>
+        <!-- Reply Review Modal -->
+        <div id="replyReviewModal" class="modal">
+          <!-- Modal content -->
+          <div class="modal-content">
+            <div id="rlr-review-from" class="container-xxxl">
+              <form action="replyReview/" method="POST" enctype="multipart/form-data">
+                <section class="rlr-section rlr-section__content--md-top row justify-content-center my-0">
+                  <div class="modal-header">
+                    <div class="rlr-section__heading py-4 px-3">
+                      <label class="rlr-form-label rlr-form-label--dark m-0" for="rlr_review_form_title"> Balas Ulasan
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-xl-12">
+                    <fieldset class="rlr-product-form--show px-3">
+                      <legend class="rlr-review-form__hidden-legend">Balas ulasan</legend>
+                      <!-- Section heading -->
                       <div class="rlr-fieldrow__form-element">
                         <div class="rlr-fieldrow__item mt-2 mb-4">
-                          <label class="rlr-form-label rlr-form-label--dark mb-3" for="rlr_review_form_title"> Judul
-                          </label> <input type="text" name="judul" autocomplete="off" maxlength="70" id="rlr_review_form_title" class="form-control" placeholder="Berikan judul menarik">
+                          <label class="rlr-form-label rlr-form-label--dark mb-3" for="rlr_review_form_title"> Judul balasan
+                          </label> <input type="text" name="judul" autocomplete="off" maxlength="70" id="rlr_review_form_title" class="form-control" placeholder="Berikan judul untuk balasan ulasan">
                         </div>
                         <div class="rlr-fieldrow__item mt-2 mb-4">
-                          <label class="rlr-form-label rlr-form-label--dark mb-3" for="rlr_review_form_desc"> Ceritakan
-                            pengalaman Anda </label>
-                          <textarea id="rlr_review_form_desc" name="komentar" class="form-control form-control--text-area" placeholder="Provide more information for travelers to find your starting point easily, for example, opposite to the xyz landmark building" rows="12"></textarea>
+                          <label class="rlr-form-label rlr-form-label--dark mb-3" for="rlr_review_form_desc"> Deskripsi balasan </label>
+                          <textarea id="rlr_review_form_desc" name="komentar" class="form-control form-control--text-area" placeholder="Berikan balasan profesional mengenai bisnis Anda" rows="12"></textarea>
                         </div>
                       </div>
-                      <div class="rlr-fieldrow__item mt-2 mb-4" style="z-index: 200">
-                        <label class="rlr-form-label rlr-form-label--dark mb-4" for="rlr_review_form_title"> Tambahkan
-                          foto dari pengalaman Anda. </label>
-                        <div class="upload-card">
-                          <div class="drag-area">
-                            <span class="visible">
-                              Drag & drop gambar disini atau
-                              <span class="select-file" role="button">Pilih File</span>
-                            </span>
-                            <span class="on-drop">Jatuhkan gambar disini</span>
-                            <input name="file[]" type="file" class="file" multiple />
-                          </div>
-
-                          <!-- IMAGE PREVIEW CONTAINER -->
-                          <div class="upload-container">
-
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </fieldset>
-                </div>
-                <div class="modal-footer d-flex justify-content-between">
-                  <div class="rlr-review-form__buttons mt-0 py-2 px-3" style="width: 100%">
-                    <button type="button" class="btn rlr-button rlr-review-form__cancel rlr-button--small rlr-button--rounded rlr-button--white mt-0" id="closeAddReviewModalBtn">Batal</button>
-                    <button type="submit" class="btn rlr-button rlr-review-form__submit rlr-button--small rlr-button--rounded rlr-button--brand mt-0">Kirim</button>
                   </div>
-                </div>
-              </section>
+                  <input type="hidden" id="id_reply_ulasan" name="id_ulasan" value="">
+                  <input type="hidden" id="id_bisnis" name="id_bisnis" value="">
+                  </fieldset>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+              <div class="rlr-review-form__buttons mt-0 py-2 px-3" style="width: 100%">
+                <button type="button" class="btn rlr-button rlr-review-form__cancel rlr-button--small rlr-button--rounded rlr-button--white mt-0" id="closeReplyReviewModalBtn">Batal</button>
+                <button type="submit" class="btn rlr-button rlr-review-form__submit rlr-button--small rlr-button--rounded rlr-button--brand mt-0">Kirim</button>
+              </div>
+            </div>
+            </section>
             </form>
           </div>
         </div>
-      </div>
+    </div>
+  <? endif ?>
 
-      <!-- Review Modal -->
-      <div id="showReviewModal" class="modal">
-        <!-- Modal content -->
-        <div class="modal-content">
-          <!-- Product cards -->
-          <div class="modal-header d-flex justify-content-between align-items-center px-4 py-3">
-            <div class="d-flex justify-content-start gap-2">
-              <i class="rlr-icon-font flaticon-star-1 m-0" style="font-size: 1.5rem;"> </i>
-              <h1 class="rlr-section__heading--main rlr-product-detail-header__title m-0" style="font-size: 1.5rem;">
-                4.58 · 14 ulasan</h1>
-            </div>
-            <i class="rlr-icon-font flaticon-close m-0" style="font-size: 1rem;" id="closeShowReviewModalBtn"></i>
-          </div>
-          <div class="row p-4 m-0">
-            <!-- Search header -->
-            <div class="rlr-search-results-header rlr-search-results-header__wrapper border-0 p-0 d-xl-flex gap-3">
-              <!-- Title -->
-              <div class="rlr-input-group" aria-expanded="false">
-                <input type="text" style="width: 100%;" autocomplete="off" class="form-control" id="searchReview" placeholder="Cari ulasan" required>
+  <? if (isset($user['level']) && $user['level'] === 'pengguna') : ?>
+  <!-- Add Review Modal -->
+  <div id="addReviewModal" class="modal">
+    <!-- Modal content -->
+    <div class="modal-content">
+      <div id="rlr-review-from" class="container-xxxl">
+        <form action="addReview/" method="POST" enctype="multipart/form-data">
+          <section class="rlr-section rlr-section__content--md-top row justify-content-center my-0">
+            <div class="modal-header">
+              <div class="rlr-section__heading py-4 px-3">
+                <label class="rlr-form-label rlr-form-label--dark m-0" for="rlr_review_form_title"> Tulis Ulasan
+                </label>
               </div>
-              <!-- Sort order -->
-              <div class="rlr-search-results-header__sorting-wrapper">
-                <span class="rlr-search-results-header__label">Urut berdasarkan:</span>
-                <div class="dropdown rlr-dropdown rlr-js-dropdown">
-                  <button class="btn dropdown-toggle rlr-dropdown__button rlr-js-dropdown-button" type="button" id="rlr_dropdown_menu_search_results" data-bs-toggle="dropdown" aria-expanded="false" data-bs-offset="-20,25">Ulasan terbaru</button>
-                  <ul class="dropdown-menu rlr-dropdown__menu" aria-labelledby="rlr_dropdown_menu_search_results">
-                    <li>
-                      <a class="dropdown-item rlr-dropdown__item rlr-js-dropdown-item active" id="sort">Ulasan terbaru</a>
-                    </li>
-                    <li>
-                      <a class="dropdown-item rlr-dropdown__item rlr-js-dropdown-item" id="sort">Ulasan terlama</a>
-                    </li>
-                    <li>
-                      <hr class="dropdown-divider rlr-dropdown__divider">
-                    </li>
-                    <li>
-                      <a class="dropdown-item rlr-dropdown__item rlr-js-dropdown-item" id="sort">Rating tertinggi</a>
-                    </li>
-                    <li>
-                      <a class="dropdown-item rlr-dropdown__item rlr-js-dropdown-item" id="sort">Rating terendah</a>
-                    </li>
-                  </ul>
+            </div>
+            <div class="col-xl-12">
+              <fieldset class="rlr-product-form--show px-3">
+                <legend class="rlr-review-form__hidden-legend">Tulis ulasan</legend>
+                <!-- Section heading -->
+                <div class="rlr-fieldrow">
+                  <div class="rlr-fieldrow_item my-2">
+                    <div class='rating-stars text-center row'>
+                      <ul id='stars'>
+                        <li class='star' title='Poor' data-value='1'>
+                          <i class='rlr-icon-font flaticon-star-1'></i>
+                        </li>
+                        <li class='star' title='Fair' data-value='2'>
+                          <i class='rlr-icon-font flaticon-star-1'></i>
+                        </li>
+                        <li class='star' title='Good' data-value='3'>
+                          <i class='rlr-icon-font flaticon-star-1'></i>
+                        </li>
+                        <li class='star' title='Excellent' data-value='4'>
+                          <i class='rlr-icon-font flaticon-star-1'></i>
+                        </li>
+                        <li class='star' title='Perfect' data-value='5'>
+                          <i class='rlr-icon-font flaticon-star-1'></i>
+                        </li>
+                      </ul>
+                    </div>
+                    <input type="hidden" name="rating" id="rating" value="1">
+                    <input type="hidden" name="id_bisnis" value="<?= $business->idBisnis ?>">
+                  </div>
+                  <div class="rlr-fieldrow__form-element">
+                    <div class="rlr-fieldrow__item mt-2 mb-4">
+                      <label class="rlr-form-label rlr-form-label--dark mb-3" for="rlr_review_form_title"> Judul
+                      </label> <input type="text" name="judul" autocomplete="off" maxlength="70" id="rlr_review_form_title" class="form-control" placeholder="Berikan judul menarik">
+                    </div>
+                    <div class="rlr-fieldrow__item mt-2 mb-4">
+                      <label class="rlr-form-label rlr-form-label--dark mb-3" for="rlr_review_form_desc"> Ceritakan
+                        pengalaman Anda </label>
+                      <textarea id="rlr_review_form_desc" name="komentar" class="form-control form-control--text-area" placeholder="Jelaskan hal menarik dari kunjungan Anda" rows="12"></textarea>
+                    </div>
+                  </div>
+                  <div class="rlr-fieldrow__item mt-2 mb-4" style="z-index: 200">
+                    <label class="rlr-form-label rlr-form-label--dark mb-4" for="rlr_review_form_title"> Tambahkan
+                      foto dari pengalaman Anda. </label>
+                    <div class="upload-card">
+                      <div class="drag-area">
+                        <span class="visible">
+                          Drag & drop gambar disini atau
+                          <span class="select-file" role="button">Pilih File</span>
+                        </span>
+                        <span class="on-drop">Jatuhkan gambar disini</span>
+                        <input name="file[]" type="file" class="file" multiple />
+                      </div>
+
+                      <!-- IMAGE PREVIEW CONTAINER -->
+                      <div class="upload-container">
+
+                      </div>
+                    </div>
+                  </div>
                 </div>
+              </fieldset>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+              <div class="rlr-review-form__buttons mt-0 py-2 px-3" style="width: 100%">
+                <button type="button" class="btn rlr-button rlr-review-form__cancel rlr-button--small rlr-button--rounded rlr-button--white mt-0" id="closeAddReviewModalBtn">Batal</button>
+                <button type="submit" class="btn rlr-button rlr-review-form__submit rlr-button--small rlr-button--rounded rlr-button--brand mt-0">Kirim</button>
               </div>
             </div>
+          </section>
+        </form>
+      </div>
+    </div>
+  </div>
+  <? endif; ?>
+
+  <!-- Review Modal -->
+  <div id="showReviewModal" class="modal">
+    <!-- Modal content -->
+    <div class="modal-content">
+      <!-- Product cards -->
+      <div class="modal-header d-flex justify-content-between align-items-center px-4 py-3">
+        <div class="d-flex justify-content-start gap-2">
+          <i class="rlr-icon-font flaticon-star-1 m-0" style="font-size: 1.5rem;"> </i>
+          <h1 class="rlr-section__heading--main rlr-product-detail-header__title m-0" style="font-size: 1.5rem;"><?= round($reviews->getAverageRatingById($business->idBisnis), 1) ?> · <?= $reviews->getTotalReviewsById($business->idBisnis) ?> ulasan</h1>
+
         </div>
-          <div class="row m-0">
-            <aside class="col-lg-12 col-xl-4 p-4">
-              <label class="rlr-form-label rlr-form-label-- rlr-product-filters__label"> Rating </label>
-              <ul class="rlr-checkboxes">
-                <li class="form-check form-check-block">
-                  <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox rating-checkbox" id="rlr-filter-rating-5" value="5" type="checkbox" />
-                  <label aria-label="rating-5" for="rlr-filter-rating-5">
-                    <span class="rlr-product-filters__hidden">rating 5</span>
-                    <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i>
-                  </label>
+        <i class="rlr-icon-font flaticon-close m-0" style="font-size: 1rem;" id="closeShowReviewModalBtn"></i>
+      </div>
+      <div class="row p-4 m-0">
+        <!-- Search header -->
+        <div class="rlr-search-results-header rlr-search-results-header__wrapper border-0 p-0 d-xl-flex gap-3">
+          <!-- Title -->
+          <div class="rlr-input-group" aria-expanded="false">
+            <input type="text" style="width: 100%;" autocomplete="off" class="form-control" id="searchReview" placeholder="Cari ulasan" required>
+          </div>
+          <!-- Sort order -->
+          <div class="rlr-search-results-header__sorting-wrapper">
+            <span class="rlr-search-results-header__label">Urut berdasarkan:</span>
+            <div class="dropdown rlr-dropdown rlr-js-dropdown">
+              <button class="btn dropdown-toggle rlr-dropdown__button rlr-js-dropdown-button" type="button" id="rlr_dropdown_menu_search_results" data-bs-toggle="dropdown" aria-expanded="false" data-bs-offset="-20,25">Ulasan terbaru</button>
+              <ul class="dropdown-menu rlr-dropdown__menu" aria-labelledby="rlr_dropdown_menu_search_results">
+                <li>
+                  <a class="dropdown-item rlr-dropdown__item rlr-js-dropdown-item active" id="sort">Ulasan terbaru</a>
                 </li>
-                <li class="form-check form-check-block">
-                  <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox rating-checkbox" id="rlr-filter-rating-4" value="4" type="checkbox" />
-                  <label aria-label="rating-4" for="rlr-filter-rating-4">
-                    <span class="rlr-product-filters__hidden">rating 4</span>
-                    <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i>
-                  </label>
+                <li>
+                  <a class="dropdown-item rlr-dropdown__item rlr-js-dropdown-item" id="sort">Ulasan terlama</a>
                 </li>
-                <li class="form-check form-check-block">
-                  <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox rating-checkbox" id="rlr-filter-rating-3" value="3" type="checkbox" />
-                  <label aria-label="rating-3" for="rlr-filter-rating-3">
-                    <span class="rlr-product-filters__hidden">rating 3</span>
-                    <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i> <i class="rlr-icon-font flaticon-star"> </i>
-                  </label>
+                <li>
+                  <hr class="dropdown-divider rlr-dropdown__divider">
                 </li>
-                <li class="form-check form-check-block">
-                  <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox rating-checkbox" id="rlr-filter-rating-2" value="2" type="checkbox" />
-                  <label aria-label="rating-2" for="rlr-filter-rating-2">
-                    <span class="rlr-product-filters__hidden">rating 2</span>
-                    <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i> <i class="rlr-icon-font flaticon-star"> </i> <i class="rlr-icon-font flaticon-star"> </i>
-                  </label>
+                <li>
+                  <a class="dropdown-item rlr-dropdown__item rlr-js-dropdown-item" id="sort">Rating tertinggi</a>
                 </li>
-                <li class="form-check form-check-block">
-                  <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox rating-checkbox" id="rlr-filter-rating-1" value="1" type="checkbox" />
-                  <label aria-label="rating-1" for="rlr-filter-rating-1">
-                    <span class="rlr-product-filters__hidden">rating 1</span>
-                    <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i> <i class="rlr-icon-font flaticon-star"> </i> <i class="rlr-icon-font flaticon-star"> </i> <i class="rlr-icon-font flaticon-star"> </i>
-                  </label>
+                <li>
+                  <a class="dropdown-item rlr-dropdown__item rlr-js-dropdown-item" id="sort">Rating terendah</a>
                 </li>
               </ul>
-            </aside>
-            <div class="col-lg-12 col-xl-8 modal-review-list">
-              <!-- Review -->
-              <div class="review-wrapper pb-3" style="height: 500px; overflow-y: scroll;">
-                <!-- Review section here -->
-              </div>
             </div>
           </div>
         </div>
       </div>
-
-      <!-- Report Modal -->
-      <div id="reportReviewModal" class="modal">
-        <div class="modal-content">
-          <div id="rlr-review-from" class="container-xxxl">
-            <form action="reportReview/" method="POST">
-              <section class="rlr-section rlr-section__content--md-top row justify-content-center my-0">
-                <div class="modal-header">
-                  <div class="rlr-section__heading py-4 px-3">
-                    <label class="rlr-form-label rlr-form-label--dark m-0" for="rlr_review_form_title"> Laporkan ulasan
-                    </label>
-                  </div>
-                </div>
-                <div class="col-xl-12">
-                  <fieldset class="rlr-product-form--show px-3">
-                    <legend class="rlr-review-form__hidden-legend">Tulis ulasan</legend>
-                    <!-- Section heading -->
-                    <div class="rlr-fieldrow">
-
-                      <div class="rlr-fieldrow__form-element">
-                        <ul class="rlr-radios">
-                          <li class="form-check">
-                            <input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="profane_content_review" value="Ulasan tidak sopan, mengandung unsur pelecehan seksual atau ujaran kebencian." /> <label class="rlr-form-label rlr-form-label--radio" for="profane_content_review"> Ulasan tidak sopan,
-                              mengandung unsur pelecehan seksual atau ujaran kebencian. </label>
-                          </li>
-                          <li class="form-check"><input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="ilegal_activity_review" value="Ulasan mempromosikan kegiatan ilegal" /> <label class="rlr-form-label rlr-form-label--radio" for="ilegal_activity_review"> Ulasan mempromosikan
-                              kegiatan ilegal </label></li>
-                          <li class="form-check"><input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="biased_review" value="Ulasan bias atau ditulis oleh orang yang berafiliasi dengan bisnis" /> <label class="rlr-form-label rlr-form-label--radio" for="biased_review"> Ulasan bias atau ditulis oleh orang
-                              yang berafiliasi dengan bisnis </label></li>
-                          <li class="form-check"><input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="wrong_business_review" value="Ulasan ditujukan untuk bisnis yang salah" /> <label class="rlr-form-label rlr-form-label--radio" for="wrong_business_review"> Ulasan ditujukan untuk
-                              bisnis yang salah </label></li>
-                          <li class="form-check"><input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="duplicate_review" value="Ulasan merupakan duplikat yang dibuat oleh orang yang sama" /> <label class="rlr-form-label rlr-form-label--radio" for="duplicate_review"> Ulasan merupakan duplikat yang
-                              dibuat oleh orang yang sama </label></li>
-                          <li class="form-check"><input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="not_personal_review" value="Ulasan tidak menggambarkan pengalaman pribadi" /> <label class="rlr-form-label rlr-form-label--radio" for="not_personal_review"> Ulasan tidak menggambarkan
-                              pengalaman pribadi </label></li>
-                          <li class="form-check"><input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="other_review" value="Saya ingin melapor hal lain" /> <label class="rlr-form-label rlr-form-label--radio" for="other_review"> Saya ingin melapor hal lain </label>
-                          </li>
-                        </ul>
-                      </div>
-                      <input type="hidden" id="id_ulasan" name="id_ulasan" value="">
-                      <div class="rlr-fieldrow__form-element">
-                        <div class="rlr-fieldrow__item mt-2 mb-4">
-                          <label class="rlr-form-label rlr-form-label--dark mb-3" for="rlr_review_form_desc"> Jelaskan masalah Anda </label>
-                          <textarea id="rlr_review_form_desc" name="description" class="form-control form-control--text-area" placeholder="Tolong berikan deskripsi rinci tentang masalah Anda" rows="12"></textarea>
-                        </div>
-                      </div>
-                    </div>
-                  </fieldset>
-                </div>
-                <div class="modal-footer d-flex justify-content-between">
-                  <div class="rlr-review-form__buttons mt-0 py-2 px-3" style="width: 100%">
-                    <button type="button" class="btn rlr-button rlr-review-form__cancel rlr-button--small rlr-button--rounded rlr-button--white mt-0" id="closeReportReviewModalBtn">Batal</button>
-                    <button type="submit" class="btn rlr-button rlr-review-form__submit rlr-button--small rlr-button--rounded rlr-button--brand mt-0">Kirim</button>
-                  </div>
-                </div>
-              </section>
-            </form>
+      <div class="row m-0">
+        <aside class="col-lg-12 col-xl-4 p-4">
+          <label class="rlr-form-label rlr-form-label-- rlr-product-filters__label"> Rating </label>
+          <ul class="rlr-checkboxes">
+            <li class="form-check form-check-block">
+              <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox rating-checkbox" id="rlr-filter-rating-5" value="5" type="checkbox" />
+              <label aria-label="rating-5" for="rlr-filter-rating-5">
+                <span class="rlr-product-filters__hidden">rating 5</span>
+                <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i>
+              </label>
+            </li>
+            <li class="form-check form-check-block">
+              <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox rating-checkbox" id="rlr-filter-rating-4" value="4" type="checkbox" />
+              <label aria-label="rating-4" for="rlr-filter-rating-4">
+                <span class="rlr-product-filters__hidden">rating 4</span>
+                <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i>
+              </label>
+            </li>
+            <li class="form-check form-check-block">
+              <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox rating-checkbox" id="rlr-filter-rating-3" value="3" type="checkbox" />
+              <label aria-label="rating-3" for="rlr-filter-rating-3">
+                <span class="rlr-product-filters__hidden">rating 3</span>
+                <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i> <i class="rlr-icon-font flaticon-star"> </i>
+              </label>
+            </li>
+            <li class="form-check form-check-block">
+              <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox rating-checkbox" id="rlr-filter-rating-2" value="2" type="checkbox" />
+              <label aria-label="rating-2" for="rlr-filter-rating-2">
+                <span class="rlr-product-filters__hidden">rating 2</span>
+                <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i> <i class="rlr-icon-font flaticon-star"> </i> <i class="rlr-icon-font flaticon-star"> </i>
+              </label>
+            </li>
+            <li class="form-check form-check-block">
+              <input class="form-check-input rlr-form-check-input rlr-product-filters__checkbox rating-checkbox" id="rlr-filter-rating-1" value="1" type="checkbox" />
+              <label aria-label="rating-1" for="rlr-filter-rating-1">
+                <span class="rlr-product-filters__hidden">rating 1</span>
+                <i class="rlr-icon-font flaticon-star-1"> </i> <i class="rlr-icon-font flaticon-star"> </i> <i class="rlr-icon-font flaticon-star"> </i> <i class="rlr-icon-font flaticon-star"> </i> <i class="rlr-icon-font flaticon-star"> </i>
+              </label>
+            </li>
+          </ul>
+        </aside>
+        <div class="col-lg-12 col-xl-8 modal-review-list">
+          <!-- Review -->
+          <div class="review-wrapper pb-3" style="height: 500px; overflow-y: scroll;">
+            <!-- Review section here -->
           </div>
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Report Modal -->
+  <div id="reportReviewModal" class="modal">
+    <div class="modal-content">
+      <div id="rlr-review-from" class="container-xxxl">
+        <form action="reportReview/" method="POST">
+          <section class="rlr-section rlr-section__content--md-top row justify-content-center my-0">
+            <div class="modal-header">
+              <div class="rlr-section__heading py-4 px-3">
+                <label class="rlr-form-label rlr-form-label--dark m-0" for="rlr_review_form_title"> Laporkan ulasan
+                </label>
+              </div>
+            </div>
+            <div class="col-xl-12">
+              <fieldset class="rlr-product-form--show px-3">
+                <legend class="rlr-review-form__hidden-legend">Tulis ulasan</legend>
+                <!-- Section heading -->
+                <div class="rlr-fieldrow">
+
+                  <div class="rlr-fieldrow__form-element">
+                    <ul class="rlr-radios">
+                      <li class="form-check">
+                        <input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="profane_content_review" value="Ulasan tidak sopan, mengandung unsur pelecehan seksual atau ujaran kebencian." /> <label class="rlr-form-label rlr-form-label--radio" for="profane_content_review"> Ulasan tidak sopan,
+                          mengandung unsur pelecehan seksual atau ujaran kebencian. </label>
+                      </li>
+                      <li class="form-check"><input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="ilegal_activity_review" value="Ulasan mempromosikan kegiatan ilegal" /> <label class="rlr-form-label rlr-form-label--radio" for="ilegal_activity_review"> Ulasan mempromosikan
+                          kegiatan ilegal </label></li>
+                      <li class="form-check"><input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="biased_review" value="Ulasan bias atau ditulis oleh orang yang berafiliasi dengan bisnis" /> <label class="rlr-form-label rlr-form-label--radio" for="biased_review"> Ulasan bias atau ditulis oleh orang
+                          yang berafiliasi dengan bisnis </label></li>
+                      <li class="form-check"><input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="wrong_business_review" value="Ulasan ditujukan untuk bisnis yang salah" /> <label class="rlr-form-label rlr-form-label--radio" for="wrong_business_review"> Ulasan ditujukan untuk
+                          bisnis yang salah </label></li>
+                      <li class="form-check"><input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="duplicate_review" value="Ulasan merupakan duplikat yang dibuat oleh orang yang sama" /> <label class="rlr-form-label rlr-form-label--radio" for="duplicate_review"> Ulasan merupakan duplikat yang
+                          dibuat oleh orang yang sama </label></li>
+                      <li class="form-check"><input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="not_personal_review" value="Ulasan tidak menggambarkan pengalaman pribadi" /> <label class="rlr-form-label rlr-form-label--radio" for="not_personal_review"> Ulasan tidak menggambarkan
+                          pengalaman pribadi </label></li>
+                      <li class="form-check"><input type="radio" required class="form-check-input rlr-form-check-input" name="report" id="other_review" value="Saya ingin melapor hal lain" /> <label class="rlr-form-label rlr-form-label--radio" for="other_review"> Saya ingin melapor hal lain </label>
+                      </li>
+                    </ul>
+                  </div>
+                  <input type="hidden" id="id_ulasan" name="id_ulasan" value="">
+                  <div class="rlr-fieldrow__form-element">
+                    <div class="rlr-fieldrow__item mt-2 mb-4">
+                      <label class="rlr-form-label rlr-form-label--dark mb-3" for="rlr_review_form_desc"> Jelaskan masalah Anda </label>
+                      <textarea id="rlr_review_form_desc" name="description" class="form-control form-control--text-area" placeholder="Tolong berikan deskripsi rinci tentang masalah Anda" rows="12"></textarea>
+                    </div>
+                  </div>
+                </div>
+              </fieldset>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+              <div class="rlr-review-form__buttons mt-0 py-2 px-3" style="width: 100%">
+                <button type="button" class="btn rlr-button rlr-review-form__cancel rlr-button--small rlr-button--rounded rlr-button--white mt-0" id="closeReportReviewModalBtn">Batal</button>
+                <button type="submit" class="btn rlr-button rlr-review-form__submit rlr-button--small rlr-button--rounded rlr-button--brand mt-0">Kirim</button>
+              </div>
+            </div>
+          </section>
+        </form>
+      </div>
+    </div>
+  </div>
+  </div>
   </main>
   <!-- Footer -->
   <footer class="rlr-footer rlr-section rlr-section__mt">
@@ -1030,8 +1196,13 @@ $place = new Place($conn);
             <h4>Lainnya</h4>
             <ul>
               <li><a href="../blog/">Blog</a></li>
-              <li><a href="../new-listing/">Daftarkan bisnis</a></li>
-              <li><a href="../contact/">Hubungi kami</a></li>
+              <? if (isset($user['level']) && $user['level'] === 'admin') : ?>
+                <li><a href="../dashboard/admin/">Dashboard Admin</a></li>
+              <? elseif (isset($user['level']) && $user['level'] === 'bisnis') : ?>
+                <li><a href="../dashboard/business/">Dashboard Bisnis</a></li>
+              <? else : ?>
+                <li><a href="../manage-listing/">Daftarkan bisnis</a></li>
+              <? endif; ?>
             </ul>
           </nav>
         </div>
@@ -1066,6 +1237,26 @@ $place = new Place($conn);
   <script src="../js/upload.js"></script>
 
   <script>
+    <? if (isset($user['id_pengguna'])) : ?>
+      $(document).on('click', '.rlr-js-action-wishlist', function() {
+        var id = $(this).attr('id');
+        var $this = $(this);
+
+        $.ajax({
+          url: '../wishlist/toggle_wishlist.php',
+          type: 'POST',
+          data: {
+            id_bisnis: id,
+            id_pengguna: <?= $user['id_pengguna'] ?>
+          },
+          error: function(response) {
+            console.log(response);
+          }
+        });
+
+      });
+    <? endif; ?>
+
     let map = L.map('map');
 
     function loadMap(lat, lng) {

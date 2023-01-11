@@ -140,7 +140,8 @@ class Place
                         WHEN 'kecamatan' = :locationType THEN wk.id_kecamatan = :locationId
                         WHEN 'kabupaten' = :locationType THEN wk.id_kabupaten = :locationId
                         WHEN 'provinsi' = :locationType THEN wp.id_provinsi = :locationId
-                    END";
+                    END
+                    AND b.status = 'disetujui'";
 
         $stmt = $this->conn->prepare($query);
         $stmt->execute([

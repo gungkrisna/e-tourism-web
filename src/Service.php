@@ -32,6 +32,7 @@ class Service
         $query = "SELECT * FROM {$this->tableName} WHERE id_bisnis = ? AND disediakan = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([$idBisnis, true]);
+        
         return $stmt->fetchAll();
     }
 
@@ -40,25 +41,25 @@ class Service
         $query = "SELECT * FROM {$this->tableName} WHERE id_bisnis = ? AND disediakan = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([$idBisnis, false]);
+
         return $stmt->fetchAll();
     }
 
-    public function update(Service $service)
-    {
-        $query = "UPDATE {$this->tableName} SET id_bisnis = :id_bisnis, layanan = :layanan, disediakan = :disediakan WHERE id_layanan_bisnis = :id_layanan_bisnis";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":id_bisnis", $service->id_bisnis);
-        $stmt->bindParam(":layanan", $service->layanan);
-        $stmt->bindParam(":disediakan", $service->disediakan);
-        $stmt->bindParam(":id_layanan_bisnis", $service->id_layanan_bisnis);
-        return $stmt->rowCount() > 0;
-    }
-
-    public function delete(Service $service)
+    public function delete($idLayananBisnis)
     {
         $query = "DELETE FROM {$this->tableName} WHERE id_layanan_bisnis = ?";
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $service->id_layanan_bisnis);
-        return $stmt->rowCount() > 0;
+        $stmt->bindParam(1, $idLayananBisnis);
+
+        return $stmt->execute();
+    }
+
+    public function deleteServicesByBusinessId($idBisnis)
+    {
+        $query = "DELETE FROM {$this->tableName} WHERE id_bisnis = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $idBisnis);
+
+        return $stmt->execute();
     }
 }

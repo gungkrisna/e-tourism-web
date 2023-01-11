@@ -31,7 +31,7 @@ class BusinessService
 
     public function updateBusiness(Business $business)
     {
-        $query = "UPDATE bisnis SET nama = ?, deskripsi = ?, telepon = ?, email = ?, website = ?, alamat = ?, id_desa = ?, lat = ?, lng = ? WHERE id_bisnis = ?";
+        $query = "UPDATE bisnis SET nama = ?, deskripsi = ?, telepon = ?, email = ?, website = ?, alamat = ?, id_desa = ?, lat = ?, lng = ?, status = ? WHERE id_bisnis = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([
             $business->getNama(),
@@ -43,6 +43,7 @@ class BusinessService
             $business->getIdDesa(),
             $business->getLat(),
             $business->getLng(),
+            $business->getStatus(),
             $business->getIdBisnis()
         ]);
         return $stmt->rowCount() > 0;
@@ -54,6 +55,30 @@ class BusinessService
         $stmt = $this->conn->prepare($query);
         $stmt->execute([$idBisnis]);
         return $stmt->rowCount() > 0;
+    }
+
+    public function rejectBusinessListing($idBisnis, $alasan)
+    {
+        $query = "INSERT INTO penolakan_bisnis (id_bisnis, alasan) VALUES (?, ?)";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$idBisnis, $alasan]);
+        return $stmt->rowCount() > 0;
+    }
+    
+    public function removeRejectedBusinessListing($idBisnis)
+    {
+        $query = "DELETE FROM penolakan_bisnis WHERE id_bisnis = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$idBisnis]);
+        return $stmt->rowCount() > 0;
+    }
+
+    public function readRejectedBusinessListing($idBisnis)
+    {
+        $query = "SELECT * FROM penolakan_bisnis WHERE id_bisnis = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$idBisnis]);
+        return $stmt->fetchAll();
     }
 
     public function getBusinessById($idBisnis)
@@ -81,7 +106,33 @@ class BusinessService
         );
     }
 
-    public function getAllBusinessCategory() {
+    public function getBusinessByUserId($idPengguna)
+    {
+        $query = "SELECT * FROM bisnis WHERE id_pengguna = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$idPengguna]);
+        $row = $stmt->fetch();
+        if ($row === false) {
+            return null;
+        }
+        return new Business(
+            $row['id_bisnis'],
+            $row['id_pengguna'],
+            $row['nama'],
+            $row['deskripsi'],
+            $row['telepon'],
+            $row['email'],
+            $row['website'],
+            $row['alamat'],
+            $row['id_desa'],
+            $row['lat'],
+            $row['lng'],
+            $row['status']
+        );
+    }
+
+    public function getAllBusinessCategory()
+    {
         $query = "SELECT * FROM kategori";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -107,19 +158,54 @@ class BusinessService
         $stmt->execute();
     }
 
-    public function getMostPopularBusinesses()
+    public function updateCategoryByBusinessId($idKategori, $idBisnis)
     {
-        $query = "SELECT b.id_bisnis, b.nama, AVG(r.rating) as avg_rating, COUNT(r.id_ulasan) as total_reviews, wd.id_kecamatan, wk.id_kabupaten, b.alamat
+        $query = "UPDATE kategori_bisnis SET id_kategori = ? WHERE id_bisnis = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $idKategori);
+        $stmt->bindParam(2, $idBisnis);
+        $stmt->execute();
+    }
+
+    public function deleteBusinessFromCategoryId($idBisnis)
+    {
+        $query = "DELETE FROM kategori_bisnis WHERE id_bisnis = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $idBisnis);
+        $stmt->execute();
+    }
+
+    public function getMostPopularBusinesses($id_provinsi = null)
+    {
+        $query = "SELECT b.id_bisnis, b.nama, b.status, AVG(r.rating) as avg_rating, COUNT(r.id_ulasan) as total_reviews, wd.id_kecamatan, wk.id_kabupaten, wp.id_provinsi, b.alamat
                     FROM bisnis b
                     LEFT JOIN ulasan r ON r.id_bisnis = b.id_bisnis
                     JOIN wilayah_desa wd ON wd.id_desa = b.id_desa
                     JOIN wilayah_kecamatan wk ON wk.id_kecamatan = wd.id_kecamatan
-                    GROUP BY b.id_bisnis
+                    JOIN wilayah_kabupaten wb ON wb.id_kabupaten = wk.id_kabupaten
+                    JOIN wilayah_provinsi wp ON wp.id_provinsi = wb.id_provinsi";
+        if ($id_provinsi !== null) {
+            $query .= " WHERE wp.id_provinsi = $id_provinsi";
+        }
+        $query .= " GROUP BY b.id_bisnis
                     HAVING avg_rating >= 3
-                    ORDER BY total_reviews DESC
-        ";
+                    ORDER BY total_reviews DESC";
+    
         $result = $this->conn->query($query);
-
+    
         return $result->fetchAll();
+    }    
+
+    public function countBusinessesByStatus() {
+        $query = "SELECT status, COUNT(*) as count FROM bisnis GROUP BY status";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        $results = [];
+        while ($row = $stmt->fetch()) {
+            $results[$row['status']] = $row['count'];
+        }
+        return $results;
     }
+    
+    
 }

@@ -32,14 +32,40 @@ class BusinessPhoto
         return $stmt->fetchAll();
     }
 
-    public function delete($idFotoBisnis)
+    public function getPhotoById($idFotoBisnis, $idBisnis)
     {
-        // Prepare the delete statement
-        $query = "DELETE FROM $this->table_name WHERE id_foto_bisnis = ?";
+        $query = "SELECT filename FROM $this->table_name WHERE id_foto_bisnis = ? AND id_bisnis = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $idFotoBisnis);
+        $stmt->bindParam(2, $idBisnis);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function delete($idFotoBisnis = null, $idBisnis = null)
+    {
+        $query = "DELETE FROM $this->table_name WHERE ";
+        $params = array();
+
+        if ($idFotoBisnis !== null) {
+            $query .= "id_foto_bisnis = ?";
+            $params[] = $idFotoBisnis;
+        }
+
+        if ($idBisnis !== null) {
+            if (!empty($params)) {
+                $query .= " AND ";
+            }
+            $query .= "id_bisnis = ?";
+            $params[] = $idBisnis;
+        }
+
         $stmt = $this->conn->prepare($query);
 
-        $stmt->bindParam(1, $idFotoBisnis);
-        
-        return $stmt->rowCount() > 0;
+        for ($i = 0; $i < count($params); $i++) {
+            $stmt->bindParam($i + 1, $params[$i]);
+        }
+
+        return $stmt->execute();
     }
 }

@@ -1,12 +1,9 @@
 let map = L.map('map');
-let lat, lng, marker;
-let alamatChanged = false;
+let lat, lng, marker, alamatChanged;
 
 $(document).ready(function () {
 
-    loadMap(-6.16819755, 106.82380775460769) // Indonesia lat lng
-
-    $('#alamat').on('input', function() {
+    $('#alamat').on('input', function () {
         alamatChanged = true;
     });
 

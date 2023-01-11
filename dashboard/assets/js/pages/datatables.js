@@ -7,7 +7,6 @@ $(document).ready(function () {
     $('#datatable2').DataTable({
         "scrollY": "300px",
         "scrollCollapse": true,
-        "paging": false
     });
 
     $('#datatable3').DataTable({

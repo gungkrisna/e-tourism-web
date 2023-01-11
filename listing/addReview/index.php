@@ -44,8 +44,9 @@ if (isset($_FILES['file'])) {
     
             if (move_uploaded_file($foto["tmp_name"][$i], $target_file)) {
                 $photo->create($result, $file_name);
-            } else {
-                echo "Sorry, there was an error uploading your file.";
             }
     }
 }
+
+
+header('Location: ' . $_SERVER['HTTP_REFERER']);

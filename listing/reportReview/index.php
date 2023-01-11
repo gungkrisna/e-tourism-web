@@ -17,3 +17,5 @@ $user = $stmt->fetch();
 $report = new Report($conn);
 
 $report->create($user['id_pengguna'], $_POST['id_ulasan'], $_POST['report'], $_POST['description']);
+
+header('Location: ' . $_SERVER['HTTP_REFERER']);

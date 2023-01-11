@@ -38,6 +38,24 @@ $(document).ready(function () {
     }
   });
 
+  $(document).on('click', '#replyReviewModalBtn', function (e) {
+    e.preventDefault();
+    $('#id_bisnis').val($(this).data('id-bisnis'));
+    $('#id_reply_ulasan').val($(this).data('id-ulasan'));
+    $('#replyReviewModal').fadeIn(100, 'linear');
+  });
+
+  $(document).on('click', '#closeReplyReviewModalBtn', function (e) {
+    e.preventDefault();
+    $('#replyReviewModal').fadeOut(100, 'linear');
+  });
+
+  $(document).click(function (e) {
+    if ($(e.target).is('#replyReviewModal')) {
+      $('#replyReviewModal').fadeOut(100, 'linear');
+    }
+  });
+
   $('#showReviewModalBtn').on('click', function (e) {
     e.preventDefault();
     $('#showReviewModal').fadeIn(100, 'linear');
@@ -59,6 +77,7 @@ $(document).ready(function () {
 
   $(document).on('click', '.button-report-review', function (e) {
     e.preventDefault();
+    console.log('success');
     $('#id_ulasan').val($(this).data('id-ulasan'));
     $('#reportReviewModal').fadeIn(100, 'linear');
   });
@@ -119,7 +138,7 @@ $(document).ready(function () {
 
 /*
 
-  [ALL REVIEW]
+  [ REVIEW ]
 
 */
 
@@ -167,13 +186,13 @@ $('.rating-checkbox').change(function () {
   // Get the selected ratingList from the checkboxes
   var ratingString = "";
   $('.rating-checkbox:checked').each(function () {
-      var rating = $(this).val();
-      if (rating) {
-          if (ratingString.length > 0) {
-              ratingString += ",";
-          }
-          ratingString += rating;
+    var rating = $(this).val();
+    if (rating) {
+      if (ratingString.length > 0) {
+        ratingString += ",";
       }
+      ratingString += rating;
+    }
   });
 
   param.refresh = true;

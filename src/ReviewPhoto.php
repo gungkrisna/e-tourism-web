@@ -38,6 +38,18 @@ class ReviewPhoto
         $stmt = $this->conn->prepare($query);
 
         $stmt->bindParam(1, $idFotoUlasan);
+        $stmt->execute();
+        
+        return $stmt->rowCount() > 0;
+    }
+
+    public function deletePhotoByIdUlasan($idUlasan)
+    {
+        $query = "DELETE FROM $this->table_name WHERE id_ulasan = ?";
+        $stmt = $this->conn->prepare($query);
+
+        $stmt->bindParam(1, $idUlasan);
+        $stmt->execute();
         
         return $stmt->rowCount() > 0;
     }

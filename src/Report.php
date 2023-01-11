@@ -25,13 +25,45 @@ class Report
 
     public function read($idReport)
     {
-        $query = "SELECT * FROM $this->table_name WHERE id_report = ?";
+        $query = "SELECT * FROM $this->table_name";
+
+        if (isset($idReport) && !is_null($idReport)) {
+            $query .= " WHERE id_report = $idReport";
+        }
+
         $stmt = $this->conn->prepare($query);
 
-        $stmt->bindParam(1, $idReport);
         $stmt->execute();
 
-        return $stmt->fetch();
+        return $stmt->fetchAll();
+    }
+
+    public function readByIdUlasan($idUlasan)
+    {
+        $query = "SELECT * FROM $this->table_name WHERE id_ulasan = $idUlasan";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function readDistinct()
+    {
+        $query = "SELECT DISTINCT * FROM $this->table_name GROUP BY id_ulasan";
+
+        $stmt = $this->conn->prepare($query);
+
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+
+    public function getReportByIdUlasan($idUlasan)
+    {
+        $query = "SELECT * FROM $this->table_name WHERE id_ulasan = $idUlasan";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll();
     }
 
     public function delete($idReport)
@@ -40,6 +72,18 @@ class Report
         $stmt = $this->conn->prepare($query);
 
         $stmt->bindParam(1, $idReport);
+        $stmt->execute();
+        
+        return $stmt->rowCount() > 0;
+    }
+
+    public function deleteReportByIdUlasan($idUlasan)
+    {
+        $query = "DELETE FROM $this->table_name WHERE id_ulasan = ?";
+        $stmt = $this->conn->prepare($query);
+
+        $stmt->bindParam(1, $idUlasan);
+        $stmt->execute();
         
         return $stmt->rowCount() > 0;
     }

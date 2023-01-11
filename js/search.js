@@ -1,8 +1,6 @@
 $(document).ready(function () {
     /*
-
     Rating Checkbox
-
     */
 
     // Set up event handler for checkbox changes
@@ -155,5 +153,50 @@ $(document).ready(function () {
             }
         });
     });
+
+    /*
+
+    Search Field
+
+    */
+
+    $('#search').on('keydown', function (e) {
+        if (e.keyCode === 13 && $(this).val().trim() !== '') {
+         var query = $(this).val().trim();
+
+        // Get the current URL and create a new search parameters object from it
+        var currentUrl = new URL(location.href);
+        var searchParams = new URLSearchParams(currentUrl.search);
+
+        // Set the query parameter
+        searchParams.set("query", query);
+
+        // Update the URL in the address bar and add a new entry to the browser's history
+        currentUrl.search = searchParams.toString();
+        window.history.pushState({}, '', currentUrl.toString());
+
+        // Get all the parameters from the URL
+        var searchParams = new URLSearchParams(location.search);
+
+        // Convert the search params to an object
+        var data = {};
+        for (var [key, value] of searchParams) {
+            data[key] = value;
+        }
+
+        // Send an AJAX request to the server to retrieve the updated product list
+        $.ajax({
+            url: 'filtered_search.php',
+            data: data,
+            success: function (response) {
+                // Update the product list on the page with the new data
+                $('#filteredSearch').html(response);
+                document.title = query + " - E-Tourism";
+            }
+        });
+        } else if (e.keyCode === 13) {
+            window.location.href = "../search";
+        }
+      });
 
 });

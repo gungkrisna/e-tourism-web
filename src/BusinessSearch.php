@@ -12,12 +12,13 @@ class BusinessSearch
     public function search($params)
     {
         // Build the SQL query
-        $sql = "SELECT b.id_bisnis, b.nama, AVG(u.rating) AS avg_rating, COUNT(u.id_ulasan) AS total_reviews, kec.nama AS kecamatan, kab.nama AS kabupaten, b.alamat FROM bisnis b
+        $sql = "SELECT b.id_bisnis, b.nama, AVG(u.rating) AS avg_rating, COUNT(u.id_ulasan) AS total_reviews, d.nama AS desa, kec.nama AS kecamatan, kab.nama AS kabupaten, prov.nama AS provinsi, b.alamat FROM bisnis b
                 LEFT JOIN ulasan u ON b.id_bisnis = u.id_bisnis
                 LEFT JOIN wilayah_desa d ON b.id_desa = d.id_desa
                 LEFT JOIN wilayah_kecamatan kec ON d.id_kecamatan = kec.id_kecamatan
                 LEFT JOIN wilayah_kabupaten kab ON kec.id_kabupaten = kab.id_kabupaten
-                WHERE b.status = 'disetujui'";
+                LEFT JOIN wilayah_provinsi prov ON kab.id_provinsi = prov.id_provinsi
+                WHERE b.status = :status";
 
         // Initialize the array of WHERE clause conditions
         $filters = [];
@@ -28,6 +29,9 @@ class BusinessSearch
         }
         if (isset($params['rating'])) {
             $filters[] = "(SELECT FLOOR(AVG(rating)) FROM ulasan WHERE id_bisnis = b.id_bisnis) IN (" . $params['rating'] . ")";
+        }
+        if (isset($params['wishlist'])) {
+            $filters[] = "b.id_bisnis IN (" . $params['wishlist'] . ")";
         }
         if (isset($params['kategori'])) {
             $filters[] = "b.id_bisnis IN (SELECT id_bisnis FROM kategori_bisnis WHERE id_kategori IN (" . $params['kategori'] . "))";
@@ -61,9 +65,12 @@ class BusinessSearch
         $stmt = $this->conn->prepare($sql);
 
         // Bind the parameters
-        if ($params['query']) {
+        if (isset($params['query'])) {
             $stmt->bindValue(':query', "%{$params['query']}%");
         }
+        
+        $params['status'] = $params['status'] ?? 'disetujui';
+        $stmt->bindValue(':status', $params['status']);
 
         // Execute the query and fetch the results
         $stmt->execute();

@@ -30,9 +30,7 @@ $results = $search->search($params);
 ?>
 
 <?
-$count = 0;
 foreach ($results as $business) :
-    $count++;
     $category = $business_service->getCategoryByBusinessId($business['id_bisnis']);
 
     switch ($business_service->getCategoryByBusinessId($business['id_bisnis'])['id_kategori']) {
@@ -53,7 +51,9 @@ foreach ($results as $business) :
             <figure class="rlr-product-card__image-wrapper">
                 <span class="rlr-badge rlr-badge-- rlr-badge--accent-<?= $categoryBadgeAccent ?> rlr-product-card__badge"> <?= $category['nama'] ?> </span>
                 <div class="rlr-product-detail-header__button-wrapper">
-                    <button type="button" class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button--light rlr-wishlist-button rlr-js-action-wishlist" aria-label="Save to Wishlist">
+                    <? if (isset($user['id_pengguna'])) : ?>
+                          <button id="<?= $business['id_bisnis'] ?>" type="button" class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button--light rlr-wishlist-button rlr-js-action-wishlist <?= $wishlist->isWishlist($user['id_pengguna'], $business['id_bisnis']) ? 'is-active' : '' ?>" aria-label="Save to Wishlist">
+                          <? endif; ?>
                         <i class="rlr-icon-font flaticon-heart-1"> </i>
                     </button>
                     <span class="rlr-product-detail-header__helptext rlr-js-helptext"></span>
@@ -63,7 +63,7 @@ foreach ($results as $business) :
                         <div class="swiper-wrapper">
                             <? foreach ($photos->read($business['id_bisnis']) as $photo) : ?>
                                 <div class="swiper-slide">
-                                    <img itemprop="image" data-sizes="auto" data-src="../assets/images/listings/<?= $photo['filename'] ?>" data-srcset="../assets/images/listings/<?= $photo['filename'] ?>" class="lazyload" alt="product-image" />
+                                    <img itemprop="image" style="height: 200px; object-fit:cover" data-sizes="auto" data-src="../assets/images/listings/<?= $photo['filename'] ?>" data-srcset="../assets/images/listings/<?= $photo['filename'] ?>" class="lazyload" alt="product-image" />
                                 </div>
                             <? endforeach; ?>
                         </div>
@@ -118,5 +118,4 @@ foreach ($results as $business) :
     </div>
 
 <?
-    if ($count == 12) break;
 endforeach; ?>

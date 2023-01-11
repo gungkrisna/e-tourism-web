@@ -1,23 +1,33 @@
 <?php
 include 'src/conn.php';
+include 'src/Pengguna.php';
 include 'src/Business.php';
 include 'src/BusinessService.php';
 include 'src/BusinessPhoto.php';
 include 'src/Review.php';
 include 'src/Place.php';
+include 'src/Article.php';
+include 'src/BusinessSearch.php';
+include 'src/Wishlist.php';
 
 session_start();
 
+$pengguna = new Pengguna($conn);
+$user = [];
 if (isset($_SESSION['user_id'])) {
-  $stmt = $conn->prepare('SELECT * FROM pengguna WHERE id_pengguna = ?');
-  $stmt->execute([$_SESSION['user_id']]);
-  $user = $stmt->fetch();
+  $user = $pengguna->read($_SESSION['user_id']);
 }
+
+$wishlist = new Wishlist($conn);
 
 $business_service = new BusinessService($conn);
 $photos = new BusinessPhoto($conn);
 $reviews = new Review($conn);
 $place = new Place($conn);
+$search = new BusinessSearch($conn);
+$artikel = new Article($conn);
+
+$params = [];
 ?>
 
 <!DOCTYPE html>
@@ -35,7 +45,7 @@ $place = new Place($conn);
   <link rel="stylesheet" href="./styles/plugins.css" />
   <!-- Main CSS -->
   <link rel="stylesheet" href="./styles/main.css" />
-  <!-- Main CSS -->
+  <!-- Custom CSS -->
   <link rel="stylesheet" href="./styles/custom.css" />
   <script src="vendors/jquery.min.js"></script>
 </head>
@@ -48,7 +58,7 @@ $place = new Place($conn);
       <div class="navigation-header">
         <div class="navigation-brand-text">
           <div class="rlr-logo rlr-logo__navbar-brand rlr-logo--default">
-            <a href="./index.html">
+            <a href="#">
               <img src="./assets/svg/logoipsum-287.svg" alt="#" class="" />
             </a>
           </div>
@@ -61,7 +71,7 @@ $place = new Place($conn);
         <div class="navigation-body-header rlr-navigation__body-header">
           <div class="navigation-brand-text">
             <div class="rlr-logo rlr-logo__navbar-brand rlr-logo--default">
-              <a href="./index.html">
+              <a href="./">
                 <img src="./assets/svg/logoipsum-287.svg" alt="#" class="" />
               </a>
             </div>
@@ -71,629 +81,42 @@ $place = new Place($conn);
 
         <!-- Main menu -->
         <ul class="navigation-menu rlr-navigation__menu rlr-navigation__menu--main-links">
-          <li class="navigation-item is-active">
+          <li class="navigation-item">
             <a class="navigation-link" href="./">Home</a>
           </li>
           <!-- Mega menu -->
-          <li class="navigation-item has-submenu">
+          <li class="navigation-item">
             <a class="navigation-link" href="#">Destinasi</a>
-            <ul class="navigation-megamenu navigation-submenu navigation-megamenu-half">
-              <li class="navigation-megamenu-container">
-                <ul class="navigation-tabs">
-                  <li class="rlr-navigation__tabbed-list">
-                    <ul class="navigation-tabs-nav">
-                      <li class="navigation-tabs-nav-item is-active"><a href="#">Badung</a></li>
-                      <li class="navigation-tabs-nav-item"><a href="#">Gianyar</a></li>
-                      <li class="navigation-tabs-nav-item"><a href="#">Klungkung</a></li>
-                      <li class="navigation-tabs-nav-item"><a href="#">Buleleng</a></li>
-                      <li class="navigation-tabs-nav-item"><a href="#">Denpasar</a></li>
-                      <li class="navigation-tabs-nav-item"><a href="#">Tabanan</a></li>
-                      <li class="navigation-tabs-nav-item"><a href="./search/">View All</a></li>
-                    </ul>
-                  </li>
-                  <li class="navigation-tabs-pane is-active">
-                    <ul class="navigation-row">
-                      <li class="navigation-col">
-                        <ul class="navigation-list">
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                      <li class="navigation-col">
-                        <ul class="navigation-list">
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                    </ul>
-                  </li>
-                  <li class="navigation-tabs-pane">
-                    <ul class="navigation-row">
-                      <li class="navigation-col">
-                        <ul class="navigation-list">
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Ubud</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                      <li class="navigation-col">
-                        <ul class="navigation-list">
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                    </ul>
-                  </li>
-                  <li class="navigation-tabs-pane">
-                    <ul class="navigation-row">
-                      <li class="navigation-col">
-                        <ul class="navigation-list">
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                      <li class="navigation-col">
-                        <ul class="navigation-list">
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                    </ul>
-                  </li>
-                  <li class="navigation-tabs-pane">
-                    <ul class="navigation-row">
-                      <li class="navigation-col">
-                        <ul class="navigation-list">
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                      <li class="navigation-col">
-                        <ul class="navigation-list">
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                    </ul>
-                  </li>
-                  <li class="navigation-tabs-pane">
-                    <ul class="navigation-row">
-                      <li class="navigation-col">
-                        <ul class="navigation-list">
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                      <li class="navigation-col">
-                        <ul class="navigation-list">
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                    </ul>
-                  </li>
-                  <li class="navigation-tabs-pane">
-                    <ul class="navigation-row">
-                      <li class="navigation-col">
-                        <ul class="navigation-list">
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                      <li class="navigation-col">
-                        <ul class="navigation-list">
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                    </ul>
-                  </li>
-                  <li class="navigation-tabs-pane">
-                    <ul class="navigation-row">
-                      <li class="navigation-col">
-                        <ul class="navigation-list">
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                      <li class="navigation-col">
-                        <ul class="navigation-list">
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Kuta</a></span>
-                            </div>
-                          </li>
-                          <li class="rlr-icon-text">
-                            <div class="rlr-icon-text__text-wrapper">
-                              <span class="rlr-icon-text__title"><a href="./search">
-                                  Abiansemal</a></span>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                    </ul>
-                  </li>
-                </ul>
-              </li>
+            <ul class="navigation-dropdown">
+              <?
+              $count = 0;
+              foreach ($place->getKabupatenByProvinsi('51') as $kabupaten) :
+                $count++;
+              ?>
+                <li class="navigation-dropdown-item <?= $count == 1 ? 'active' : null ?>">
+                  <a class="navigation-dropdown-link" href="./search/?kabupaten=<?= $kabupaten['id_kabupaten'] ?>"><?= $kabupaten['nama'] ?></a>
+                </li>
+              <?
+                if ($count == 6) break;
+              endforeach; ?>
+              <? if ($place->getKabupatenByProvinsi('51') > 6) : ?>
+                <li class="navigation-dropdown-item">
+                  <a class="navigation-dropdown-link" href="./search/?provinsi='51'">Jelajahi <?= $place->getProvinsiNameById('51') ?></a>
+                </li>
+              <? endif; ?>
             </ul>
           </li>
           <li class="navigation-item">
-            <a class="navigation-link" href="./home-page.html">Kategori</a>
+            <a class="navigation-link" href="./search/?kategori=1,2,3">Kategori</a>
             <ul class="navigation-dropdown">
               <li class="navigation-dropdown-item">
-                <a class="navigation-dropdown-link" href="./search">Akomodasi</a>
+                <a class="navigation-dropdown-link" href="./search/?kategori=1">Akomodasi</a>
               </li>
               <li class="navigation-dropdown-item">
-                <a class="navigation-dropdown-link" href="./search">Makanan & Minuman</a>
+                <a class="navigation-dropdown-link" href="./search/?kategori=2">Makanan & Minuman</a>
               </li>
               <li class="navigation-dropdown-item">
-                <a class="navigation-dropdown-link" href="./search">Objek Wisata</a>
+                <a class="navigation-dropdown-link" href="./search/?kategori=3">Objek Wisata</a>
               </li>
             </ul>
           </li>
@@ -701,38 +124,57 @@ $place = new Place($conn);
             <a class="navigation-link" href="./blog"> Blog </a>
           </li>
         </ul>
-        <!-- User actions menu -->
         <ul class="navigation-menu rlr-navigation__menu align-to-right">
-          <!-- Add your listing -->
           <li class="d-lg-none d-xxl-block navigation-item">
-            <a class="navigation-link rlr-navigation__link--so" target="_blank" href="./new-listing/">Daftarkan
-              Bisnis</a>
+            <? if ($user['level'] === 'admin') : ?>
+              <a class="navigation-link rlr-navigation__link--so" target="_blank" href="./dashboard/admin">Dashboard Admin</a>
+            <? elseif ($user['level'] === 'bisnis') : ?>
+              <a class="navigation-link rlr-navigation__link--so" target="_blank" href="./dashboard/business">Dashboard Bisnis</a>
+            <? else : ?>
+              <a class="navigation-link rlr-navigation__link--so" target="_blank" href="./manage-listing/">Daftarkan Bisnis</a>
+            <? endif; ?>
           </li>
-          <!-- User account dropdown -->
           <li class="navigation-item">
-            <a class="navigation-link" href="#"> <?= isset($_SESSION['user_id']) ? $user['nama'] : 'Guest' ?> <img class="ui right spaced rlr-avatar rlr-avatar__media--rounded" style="height: 32px; width: 32px;" src="https://static.wikia.nocookie.net/inconsistently-heinous/images/e/e0/Saul_2009.jpg" alt="account avatar" /> </a>
+            <a class="navigation-link" href="#"> <?= isset($_SESSION['user_id']) ? $user['nama'] : 'Guest' ?>
+              <? if ($user && !is_null($user['avatar'])) : ?>
+                <img class="ui right spaced rlr-avatar rlr-avatar__media--rounded" style="height: 32px; width: 32px;" src="./assets/images/avatar/<?= $user['avatar'] ?>" alt="account avatar" /> </a>
+          <? else : ?>
+            <div style="align-items: center; display: flex; justify-content: center; background-color: var(--brand); color: #fff; border-radius: 50%; height: 3rem; width: 3rem;">
+              <?php
+                $initials = "";
+                $name_parts = explode(" ",  $user['nama'] ?? 'Guest');
+                $i = 0;
+                foreach ($name_parts as $part) {
+                  if ($i < 2) {
+                    $initials .= strtoupper(substr($part, 0, 1));
+                  }
+                  $i++;
+                }
+              ?>
+              <span><?= $initials ?></span>
+            </div>
+          <? endif; ?>
+          <ul class="navigation-dropdown">
 
-            <ul class="navigation-dropdown">
-
-              <?php if (isset($_SESSION['user_id'])) : ?>
-                <li class="navigation-dropdown-item">
-                  <a class="navigation-dropdown-link" href="./profile">Akun saya</a>
-                </li>
-                <li class="navigation-dropdown-item">
-                  <a class="navigation-dropdown-link" href="./wishlist">Wishlist</a>
-                </li>
-                <li class="navigation-dropdown-item">
-                  <hr class="dropdown-divider rlr-dropdown__divider" />
-                </li>
-                <li class="navigation-dropdown-item">
-                  <a class="navigation-dropdown-link" href="./logout/">Keluar</a>
-                </li>
-              <? else : ?>
-                <li class="navigation-dropdown-item">
-                  <a class="navigation-dropdown-link" href="./login/">Login</a>
-                </li>
-              <? endif; ?>
-            </ul>
+            <?php if (isset($_SESSION['user_id'])) : ?>
+              <li class="navigation-dropdown-item">
+                <a class="navigation-dropdown-link" href="./profile">Akun saya</a>
+              </li>
+              <li class="navigation-dropdown-item">
+                <a class="navigation-dropdown-link" href="./wishlist">Wishlist</a>
+              </li>
+              <li class="navigation-dropdown-item">
+                <hr class="dropdown-divider rlr-dropdown__divider" />
+              </li>
+              <li class="navigation-dropdown-item">
+                <a class="navigation-dropdown-link" href="./logout/">Keluar</a>
+              </li>
+            <? else : ?>
+              <li class="navigation-dropdown-item">
+                <a class="navigation-dropdown-link" href="./login/">Login</a>
+              </li>
+            <? endif; ?>
+          </ul>
 
           </li>
         </ul>
@@ -746,122 +188,77 @@ $place = new Place($conn);
       <div class="container">
         <div id="rlr_banner_slider" class="splide rlr-banner-splide rlr-banner-splide--v3">
           <div class="splide__track rlr-banner-splide__track">
-            <ul class="splide__list">
-              <!-- Banner slide 1 -->
-              <li class="splide__slide rlr-banner-splide__slide">
-                <div class="rlr-banner-splide__image-wrapper">
-                  <img class="rlr-banner-splide__banner-img lazyload" data-sizes="auto" data-src="./assets/images/banner/banner-1.jpeg" src="./assets/images/banner/banner-1.jpeg" alt="#" />
-                </div>
-                <article class="rlr-banner-splide__content-wrapper">
-                  <header class="rlr-banner-splide__header">
-                    <h2 class="rlr-banner-splide__slogan">The next mountain to climb</h2>
-                    <span class="rlr-banner-splide__sub-title">Batur Mountain</span>
-                  </header>
-                  <div class="rlr-banner-splide__content-desc">
-                    <div class="rlr-banner-splide__temperature">
-                      <span>10° C</span>
-                      <div class="rlr-banner-splide__arrows">
-                        <button class="rlr-banner-splide__arrow rlr-banner-splide__arrow--prev rlr-banner-js-arrow-prev" aria-label="prev button">
-                          <span> <i class="rlr-icon-font flaticon-left"> </i> </span>
-                        </button>
-                        <button class="rlr-banner-splide__arrow rlr-banner-splide__arrow--next rlr-banner-js-arrow-next" aria-label="next button">
-                          <span> <i class="rlr-icon-font flaticon-right"> </i> </span>
-                        </button>
+            <ul class="splide__list" >
+              <!-- Banner slide -->
+              <?
+              $count = 0;
+              foreach ($artikel->readAll(null, null, null, 'publik', 'id_artikel', 'DESC') as $a) :
+                $count++; ?>
+                <li class="splide__slide rlr-banner-splide__slide">
+                  <div class="rlr-banner-splide__image-wrapper">
+                    <img class="rlr-banner-splide__banner-img lazyload" style="height: 60vh; object-fit:cover;" data-sizes="auto"  data-src="./assets/images/article/<?= $a['banner'] ?>" src="./assets/images/article/<?= $a['banner'] ?>" alt="#" />
+                  </div>
+                  <article class="rlr-banner-splide__content-wrapper justify-content-start mt-5">
+                    <header class="rlr-banner-splide__header">
+                      <h2 class="rlr-banner-splide__slogan"><?= $a['judul'] ?></h2>
+                    </header>
+                    <div class="rlr-banner-splide__content-desc">
+                      <div class="rlr-banner-splide__temperature">
+                        <div class="rlr-banner-splide__arrows">
+                          <button class="rlr-banner-splide__arrow rlr-banner-splide__arrow--prev rlr-banner-js-arrow-prev" aria-label="prev button">
+                            <span> <i class="rlr-icon-font flaticon-left"> </i> </span>
+                          </button>
+                          <button class="rlr-banner-splide__arrow rlr-banner-splide__arrow--next rlr-banner-js-arrow-next" aria-label="next button">
+                            <span> <i class="rlr-icon-font flaticon-right"> </i> </span>
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                    <div class="rlr-banner-splide__payment-option animate__animated animate__fadeInUp">
-                      <span class="rlr-svg-font">
-                        <svg height="64" width="64" fill="#000000" version="1.1" id="XMLID_65_" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-10.32 -10.32 44.64 44.64" xml:space="preserve" stroke="#000000" stroke-width="0.00024000000000000003">
-                          <g id="SVGRepo_bgCarrier" stroke-width="0">
-                            <rect x="-10.32" y="-10.32" width="44.64" height="44.64" rx="22.32" fill="#ffffff" strokewidth="0"></rect>
-                          </g>
-                          <g id="SVGRepo_iconCarrier">
-                            <g id="article">
-                              <g>
-                                <path d="M20.5,22H4c-0.2,0-0.3,0-0.5,0C1.6,22,0,20.4,0,18.5V6h5V2h19v16.5C24,20.4,22.4,22,20.5,22z M6.7,20h13.8 c0.8,0,1.5-0.7,1.5-1.5V4H7v14.5C7,19,6.9,19.5,6.7,20z M2,8v10.5C2,19.3,2.7,20,3.5,20S5,19.3,5,18.5V8H2z">
-                                </path>
-                              </g>
-                              <g>
-                                <rect x="15" y="6" width="5" height="6"></rect>
-                              </g>
-                              <g>
-                                <rect x="9" y="6" width="4" height="2"></rect>
-                              </g>
-                              <g>
-                                <rect x="9" y="10" width="4" height="2"></rect>
-                              </g>
-                              <g>
-                                <rect x="9" y="14" width="11" height="2"></rect>
+                      <div class="rlr-banner-splide__payment-option animate__animated animate__fadeInUp">
+                        <span class="rlr-svg-font">
+                          <svg height="64" width="64" fill="#000000" version="1.1" id="XMLID_65_" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-10.32 -10.32 44.64 44.64" xml:space="preserve" stroke="#000000" stroke-width="0.00024000000000000003">
+                            <g id="SVGRepo_bgCarrier" stroke-width="0">
+                              <rect x="-10.32" y="-10.32" width="44.64" height="44.64" rx="22.32" fill="#ffffff" strokewidth="0"></rect>
+                            </g>
+                            <g id="SVGRepo_iconCarrier">
+                              <g id="article">
+                                <g>
+                                  <path d="M20.5,22H4c-0.2,0-0.3,0-0.5,0C1.6,22,0,20.4,0,18.5V6h5V2h19v16.5C24,20.4,22.4,22,20.5,22z M6.7,20h13.8 c0.8,0,1.5-0.7,1.5-1.5V4H7v14.5C7,19,6.9,19.5,6.7,20z M2,8v10.5C2,19.3,2.7,20,3.5,20S5,19.3,5,18.5V8H2z">
+                                  </path>
+                                </g>
+                                <g>
+                                  <rect x="15" y="6" width="5" height="6"></rect>
+                                </g>
+                                <g>
+                                  <rect x="9" y="6" width="4" height="2"></rect>
+                                </g>
+                                <g>
+                                  <rect x="9" y="10" width="4" height="2"></rect>
+                                </g>
+                                <g>
+                                  <rect x="9" y="14" width="11" height="2"></rect>
+                                </g>
                               </g>
                             </g>
-                          </g>
-                        </svg> </span>
-                      <div class="rlr-banner-splide__content-desc-right">
-                        <span class="rlr-banner-splide__payment-desc">Experience the Thrill of Climbing Mount Batur: The...</span>
-                        <a href="./blog" class="btn rlr-button rlr-banner-splide__book-now" href="/product-detail-page" tabindex="-1"> 3 min read </a>
+                          </svg> </span>
+                        <div class="rlr-banner-splide__content-desc-right">
+                          <span class="rlr-banner-splide__payment-desc"><?
+                                                                        $subjudul = $a['subjudul'];
+
+                                                                        if (strlen($subjudul) > 59) {
+                                                                          $subjudul = substr($subjudul, 0, 59) . '...';
+                                                                        }
+                                                                        ?>
+                            <?= $subjudul ?></span>
+                          <a href="./article/?id=<?= $a['id_artikel'] ?>" class="btn rlr-button rlr-banner-splide__book-now" href="./article/?id=<?= $a['id_artikel'] ?>" tabindex="-1"> <? $konten = strip_tags(str_replace('<', ' <', $a['konten']));
+                                                                                                                                                                                          $image = 3; ?> <?= $artikel->getReadTimeInMinutes(strlen($konten), $image) ?> mins read</a>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </article>
-              </li>
-              <!-- Banner slide 2 -->
-              <li class="splide__slide rlr-banner-splide__slide">
-                <div class="rlr-banner-splide__image-wrapper">
-                  <img class="rlr-banner-splide__banner-img lazyload" data-sizes="auto" data-src="./assets/images/banner/banner-2.jpeg" src="./assets/images/banner/banner-2.jpeg" alt="#" />
-                </div>
-                <article class="rlr-banner-splide__content-wrapper">
-                  <header class="rlr-banner-splide__header">
-                    <h2 class="rlr-banner-splide__slogan">Escape to the Beach Paradise</h2>
-                    <span class="rlr-banner-splide__sub-title">Nusa Penida</span>
-                  </header>
-                  <div class="rlr-banner-splide__content-desc">
-                    <div class="rlr-banner-splide__temperature">
-                      <span>27° C</span>
-                      <div class="rlr-banner-splide__arrows">
-                        <button class="rlr-banner-splide__arrow rlr-banner-splide__arrow--prev rlr-banner-js-arrow-prev" aria-label="prev button">
-                          <span> <i class="rlr-icon-font flaticon-left"> </i> </span>
-                        </button>
-                        <button class="rlr-banner-splide__arrow rlr-banner-splide__arrow--next rlr-banner-js-arrow-next" aria-label="next button">
-                          <span> <i class="rlr-icon-font flaticon-right"> </i> </span>
-                        </button>
-                      </div>
-                    </div>
-                    <div class="rlr-banner-splide__payment-option animate__animated animate__fadeInUp">
-                      <span class="rlr-svg-font">
-                        <svg height="64" width="64" fill="#000000" version="1.1" id="XMLID_65_" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-10.32 -10.32 44.64 44.64" xml:space="preserve" stroke="#000000" stroke-width="0.00024000000000000003">
-                          <g id="SVGRepo_bgCarrier" stroke-width="0">
-                            <rect x="-10.32" y="-10.32" width="44.64" height="44.64" rx="22.32" fill="#ffffff" strokewidth="0"></rect>
-                          </g>
-                          <g id="SVGRepo_iconCarrier">
-                            <g id="article">
-                              <g>
-                                <path d="M20.5,22H4c-0.2,0-0.3,0-0.5,0C1.6,22,0,20.4,0,18.5V6h5V2h19v16.5C24,20.4,22.4,22,20.5,22z M6.7,20h13.8 c0.8,0,1.5-0.7,1.5-1.5V4H7v14.5C7,19,6.9,19.5,6.7,20z M2,8v10.5C2,19.3,2.7,20,3.5,20S5,19.3,5,18.5V8H2z">
-                                </path>
-                              </g>
-                              <g>
-                                <rect x="15" y="6" width="5" height="6"></rect>
-                              </g>
-                              <g>
-                                <rect x="9" y="6" width="4" height="2"></rect>
-                              </g>
-                              <g>
-                                <rect x="9" y="10" width="4" height="2"></rect>
-                              </g>
-                              <g>
-                                <rect x="9" y="14" width="11" height="2"></rect>
-                              </g>
-                            </g>
-                          </g>
-                        </svg> </span>
-                      <div class="rlr-banner-splide__content-desc-right">
-                        <span class="rlr-banner-splide__payment-desc">Find Your Haven at the Beach: The Perfect
-                          Escape</span>
-                        <a href="./blog" class="btn rlr-button rlr-banner-splide__book-now" href="/product-detail-page" tabindex="-1"> 4 mins read </a>
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              </li>
+                  </article>
+                </li>
+              <?
+                if ($count > 2) break;
+              endforeach; ?>
             </ul>
           </div>
         </div>
@@ -946,92 +343,96 @@ $place = new Place($conn);
             <div class="swiper-wrapper">
               <?
               $count = 0;
-              foreach ($business_service->getMostPopularBusinesses() as $business) :
-                $count++;
-                $category = $business_service->getCategoryByBusinessId($business['id_bisnis']);
+              foreach ($business_service->getMostPopularBusinesses(51) as $business) :
+                if ($business['status'] === 'disetujui') {
+                  $count++;
+                  $category = $business_service->getCategoryByBusinessId($business['id_bisnis']);
 
-                switch ($business_service->getCategoryByBusinessId($business['id_bisnis'])['id_kategori']) {
-                  case 1:
-                    $categoryBadgeAccent = 'blue';
-                    break;
-                  case 2:
-                    $categoryBadgeAccent = 'red';
-                    break;
-                  case 3:
-                    $categoryBadgeAccent = 'black';
-                    break;
-                }
+                  switch ($business_service->getCategoryByBusinessId($business['id_bisnis'])['id_kategori']) {
+                    case 1:
+                      $categoryBadgeAccent = 'blue';
+                      break;
+                    case 2:
+                      $categoryBadgeAccent = 'red';
+                      break;
+                    case 3:
+                      $categoryBadgeAccent = 'black';
+                      break;
+                  }
               ?>
-                <div class="swiper-slide" data-aos="fade-up" data-aos-duration="700" data-aos-once="true">
-                  <article class="rlr-product-card rlr-product-card--v3" itemscope itemtype="https://schema.org/Product">
-                    <figure class="rlr-product-card__image-wrapper">
-                      <span class="rlr-badge rlr-badge-- rlr-badge--accent-<?= $categoryBadgeAccent ?> rlr-product-card__badge"> <?= $category['nama'] ?> </span>
-                      <div class="rlr-product-detail-header__button-wrapper">
-                        <button type="button" class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button--light rlr-wishlist-button rlr-js-action-wishlist" aria-label="Save to Wishlist">
-                          <i class="rlr-icon-font flaticon-heart-1"> </i>
-                        </button>
-                        <span class="rlr-product-detail-header__helptext rlr-js-helptext"></span>
-                      </div>
-                      <a href="./listing/?id=<?= $business['id_bisnis'] ?>">
-                        <div class="swiper rlr-js-product-multi-image-swiper">
-                          <div class="swiper-wrapper">
-                            <? foreach ($photos->read($business['id_bisnis']) as $photo) : ?>
+                  <div class="swiper-slide" data-aos="fade-up" data-aos-duration="700" data-aos-once="true">
+                    <article class="rlr-product-card rlr-product-card--v3" itemscope itemtype="https://schema.org/Product">
+                      <figure class="rlr-product-card__image-wrapper">
+                        <span class="rlr-badge rlr-badge-- rlr-badge--accent-<?= $categoryBadgeAccent ?> rlr-product-card__badge"> <?= $category['nama'] ?> </span>
+                        <div class="rlr-product-detail-header__button-wrapper">
+                          <? if (isset($user['id_pengguna'])) : ?>
+                            <button id="<?= $business['id_bisnis'] ?>" type="button" class="btn rlr-button rlr-button--circle rlr-wishlist rlr-wishlist-button--light rlr-wishlist-button rlr-js-action-wishlist <?= $wishlist->isWishlist($user['id_pengguna'], $business['id_bisnis']) ? 'is-active' : '' ?>" aria-label="Save to Wishlist">
+                            <? endif; ?>
+                            <i class="rlr-icon-font flaticon-heart-1"> </i>
+                            </button>
+                            <span class="rlr-product-detail-header__helptext rlr-js-helptext"></span>
+                        </div>
+                        <a href="./listing/?id=<?= $business['id_bisnis'] ?>">
+                          <div class="swiper rlr-js-product-multi-image-swiper">
+                            <div class="swiper-wrapper">
+                              <? foreach ($photos->read($business['id_bisnis']) as $photo) : ?>
                                 <div class="swiper-slide">
-                                    <img itemprop="image" data-sizes="auto" data-src="./assets/images/listings/<?= $photo['filename'] ?>" data-srcset="./assets/images/listings/<?= $photo['filename'] ?>" class="lazyload" alt="product-image" />
+                                  <img itemprop="image" style="height: 200px; object-fit:cover" data-sizes="auto" data-src="./assets/images/listings/<?= $photo['filename'] ?>" data-srcset="./assets/images/listings/<?= $photo['filename'] ?>" class="lazyload" alt="product-image" />
                                 </div>
-                            <? endforeach; ?>
+                              <? endforeach; ?>
+                            </div>
+                            <button type="button" class="btn rlr-button splide__arrow splide__arrow--prev" aria-label="prev button">
+                              <i class="rlr-icon-font flaticon-left-chevron"> </i>
+                            </button>
+                            <button type="button" class="btn rlr-button splide__arrow splide__arrow--next" aria-label="next button">
+                              <i class="rlr-icon-font flaticon-chevron"> </i>
+                            </button>
                           </div>
-                          <button type="button" class="btn rlr-button splide__arrow splide__arrow--prev" aria-label="prev button">
-                            <i class="rlr-icon-font flaticon-left-chevron"> </i>
-                          </button>
-                          <button type="button" class="btn rlr-button splide__arrow splide__arrow--next" aria-label="next button">
-                            <i class="rlr-icon-font flaticon-chevron"> </i>
-                          </button>
-                        </div>
-                      </a>
-                    </figure>
-                    <div class="rlr-product-card__detail-wrapper rlr-js-detail-wrapper">
-                      <!-- Product card header -->
-                      <header class="rlr-product-card__header">
-                        <div>
-                          <a href="./listing/?id=<?= $business['id_bisnis'] ?>" class="rlr-product-card__anchor-title">
-                            <h2 class="rlr-product-card__title" itemprop="name"><?= $business['nama'] ?></h2>
-                          </a>
+                        </a>
+                      </figure>
+                      <div class="rlr-product-card__detail-wrapper rlr-js-detail-wrapper">
+                        <!-- Product card header -->
+                        <header class="rlr-product-card__header">
                           <div>
-                            <a href="./listing/?id=<?= $business['id_bisnis'] ?>" class="rlr-product-card__anchor-cat">
-                              <span class="rlr-product-card__sub-title"><?= $business['alamat'] ?></span>
+                            <a href="./listing/?id=<?= $business['id_bisnis'] ?>" class="rlr-product-card__anchor-title">
+                              <h2 class="rlr-product-card__title" itemprop="name"><?= $business['nama'] ?></h2>
                             </a>
+                            <div>
+                              <a href="./listing/?id=<?= $business['id_bisnis'] ?>" class="rlr-product-card__anchor-cat">
+                                <span class="rlr-product-card__sub-title"><?= $business['alamat'] ?></span>
+                              </a>
+                            </div>
                           </div>
-                        </div>
-                      </header>
-                      <!-- Product card body -->
-                      <div class="rlr-product-card__details">
-                        <div class="rlr-product-card__prices" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
-                          <span class="rlr-product-card__from"><?= $place->getKecamatanNameById($business['id_kecamatan']) ?></span>
-                          <div class="rlr-icon-text rlr-product-card__icon-text"><span class=""><?= $place->getKabupatenNameById($business['id_kabupaten']) ?></span></div>
-                        </div>
-                        <div class="rlr-product-card__ratings" itemprop="aggregateRating" itemscope itemtype="https://schema.org/AggregateRating">
-                          <div class="rlr-review-stars" itemprop="ratingValue" itemscope itemtype="https://schema.org/Product">
-                            <?
-                            $stars = round($reviews->getAverageRatingById($business['id_bisnis']));
-                            for ($i = 0; $i < $stars; $i++) {
-                              echo '<i class="rlr-icon-font flaticon-star-1"></i>';
-                            }
-                            if ($stars < 5) {
-                              for ($i = 0; $i < 5 - $stars; $i++) {
-                                echo '<i class="rlr-icon-font flaticon-star"></i>';
+                        </header>
+                        <!-- Product card body -->
+                        <div class="rlr-product-card__details">
+                          <div class="rlr-product-card__prices" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+                            <span class="rlr-product-card__from"><?= $place->getKecamatanNameById($business['id_kecamatan']) ?></span>
+                            <div class="rlr-icon-text rlr-product-card__icon-text"><span class=""><?= $place->getKabupatenNameById($business['id_kabupaten']) ?></span></div>
+                          </div>
+                          <div class="rlr-product-card__ratings" itemprop="aggregateRating" itemscope itemtype="https://schema.org/AggregateRating">
+                            <div class="rlr-review-stars" itemprop="ratingValue" itemscope itemtype="https://schema.org/Product">
+                              <?
+                              $stars = round($reviews->getAverageRatingById($business['id_bisnis']));
+                              for ($i = 0; $i < $stars; $i++) {
+                                echo '<i class="rlr-icon-font flaticon-star-1"></i>';
                               }
-                            }
-                            ?>
+                              if ($stars < 5) {
+                                for ($i = 0; $i < 5 - $stars; $i++) {
+                                  echo '<i class="rlr-icon-font flaticon-star"></i>';
+                                }
+                              }
+                              ?>
+                            </div>
+                            <span class="rlr-product-card__rating-text" itemprop="reviewCount"><?= round($reviews->getAverageRatingById($business['id_bisnis']), 1) ?> (<?= $reviews->getTotalReviewsById($business['id_bisnis'])  ?>)</span>
                           </div>
-                          <span class="rlr-product-card__rating-text" itemprop="reviewCount"><?= round($reviews->getAverageRatingById($business['id_bisnis']), 1) ?> (<?= $reviews->getTotalReviewsById($business['id_bisnis'])  ?>)</span>
                         </div>
                       </div>
-                    </div>
-                  </article>
-                </div>
+                    </article>
+                  </div>
               <?
-                if ($count == 3) break;
+                }
+                if ($count == 4) break;
               endforeach; ?>
             </div>
           </div>
@@ -1049,67 +450,61 @@ $place = new Place($conn);
         <div class="rlr-masonary-grid__container">
           <div class="rlr-masonary-grid__one">
             <!-- Destination card -->
-            <a class="rlr-destination-card" href="./search">
-              <img data-sizes="auto" data-src="./assets/images/dest/01.jpg" data-srcset="./assets/images/dest/01@2x.jpg 2x" class="rlr-destination-card__img lazyload" alt="..." />
-              <span class="rlr-badge rlr-badge--left rlr-badge-- rlr-badge--abs rlr-badge--abs-dest"> 200+ </span>
+            <a class="rlr-destination-card" href="./search/?desa=5104050006">
+              <img data-sizes="auto" data-src="https://images.unsplash.com/photo-1557093793-d149a38a1be8?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8dWJ1ZHxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=752&h=670&q=60" data-srcset="https://images.unsplash.com/photo-1557093793-d149a38a1be8?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8dWJ1ZHxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=752&h=670&q=60" class="rlr-destination-card__img lazyload" alt="..." />
+              <span class="rlr-badge rlr-badge--left rlr-badge-- rlr-badge--abs rlr-badge--abs-dest"> <? $params['desa'] = '5104050006'; ?> <?= count($search->search($params)) ?> Tujuan Wisata </span>
               <div class="rlr-destination-card__info rlr-destination-card__info--left rlr-destination-card__info--bottom">
                 <h2 class="rlr-destination-card__info--main">Ubud</h2>
-                <p class="rlr-destination-card__info--sub">366 KM dari Tukad Badung</p>
               </div>
             </a>
           </div>
           <div class="rlr-masonary-grid__two">
             <!-- Destination card -->
-            <a class="rlr-destination-card" href="./search">
-              <img data-sizes="auto" data-src="./assets/images/dest/02.jpg" data-srcset="./assets/images/dest/02@2x.jpg 2x" class="rlr-destination-card__img lazyload" alt="..." />
-              <span class="rlr-badge rlr-badge--left rlr-badge-- rlr-badge--abs rlr-badge--abs-dest"> 320 Tujuan Wisata </span>
+            <a class="rlr-destination-card" href="./search/?desa=5103030005">
+              <img data-sizes="auto" data-src="https://images.unsplash.com/photo-1567491764093-be7719ad441d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NHx8Y2FuZ2d1fGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=752&h=670&q=60" data-srcset="https://images.unsplash.com/photo-1567491764093-be7719ad441d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NHx8Y2FuZ2d1fGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=752&h=670&q=60" class="rlr-destination-card__img lazyload" alt="..." />
+              <span class="rlr-badge rlr-badge--left rlr-badge-- rlr-badge--abs rlr-badge--abs-dest"> <? $params['desa'] = '5103030005'; ?> <?= count($search->search($params)) ?> Tujuan Wisata </span>
               <div class="rlr-destination-card__info rlr-destination-card__info--left rlr-destination-card__info--bottom">
                 <h2 class="rlr-destination-card__info--main">Canggu</h2>
-                <p class="rlr-destination-card__info--sub">577 KM dari Tukad Badung</p>
               </div>
             </a>
           </div>
           <div class="rlr-masonary-grid__three">
             <!-- Destination card -->
-            <a class="rlr-destination-card" href="./search">
-              <img data-sizes="auto" data-src="./assets/images/dest/03.jpg" data-srcset="./assets/images/dest/03@2x.jpg 2x" class="rlr-destination-card__img lazyload" alt="..." />
-              <span class="rlr-badge rlr-badge--left rlr-badge-- rlr-badge--abs rlr-badge--abs-dest"> 58 Tujuan Wisata </span>
+            <a class="rlr-destination-card" href="./search/?desa=5103010006">
+              <img data-sizes="auto" data-src="https://images.unsplash.com/photo-1551625400-47a651748ec0?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&h=1404&q=80" data-srcset="https://images.unsplash.com/photo-1551625400-47a651748ec0?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&h=1404&q=80" class="rlr-destination-card__img lazyload" alt="..." />
+              <span class="rlr-badge rlr-badge--left rlr-badge-- rlr-badge--abs rlr-badge--abs-dest"> <? $params['desa'] = '5103010006'; ?> <?= count($search->search($params)) ?> Tujuan Wisata </span>
               <div class="rlr-destination-card__info rlr-destination-card__info--left rlr-destination-card__info--bottom">
-                <h2 class="rlr-destination-card__info--main">Penida Island</h2>
-                <p class="rlr-destination-card__info--sub">327 KM dari Tukad Badung</p>
+                <h2 class="rlr-destination-card__info--main">Jimbaran</h2>
               </div>
             </a>
           </div>
           <div class="rlr-masonary-grid__four">
             <!-- Destination card -->
-            <a class="rlr-destination-card" href="./search">
-              <img data-sizes="auto" data-src="./assets/images/dest/04.jpg" data-srcset="./assets/images/dest/04@2x.jpg 2x" class="rlr-destination-card__img lazyload" alt="..." />
-              <span class="rlr-badge rlr-badge--left rlr-badge-- rlr-badge--abs rlr-badge--abs-dest"> 406 Tujuan Wisata </span>
+            <a class="rlr-destination-card" href="./search/?desa=5106040028">
+              <img data-sizes="auto" data-src="https://images.unsplash.com/photo-1640089061537-8fd7983395c5?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1296&h=670" data-srcset="https://images.unsplash.com/photo-1640089061537-8fd7983395c5?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1296&h=670" class="rlr-destination-card__img lazyload" alt="..." />
+              <span class="rlr-badge rlr-badge--left rlr-badge-- rlr-badge--abs rlr-badge--abs-dest"> <? $params['desa'] = '5106040028'; ?> <?= count($search->search($params)) ?> Tujuan Wisata </span>
               <div class="rlr-destination-card__info rlr-destination-card__info--left rlr-destination-card__info--bottom">
-                <h2 class="rlr-destination-card__info--main">Kuta</h2>
-                <p class="rlr-destination-card__info--sub">271 KM dari Tukad Badung</p>
+                <h2 class="rlr-destination-card__info--main">Kintamani</h2>
               </div>
             </a>
           </div>
           <div class="rlr-masonary-grid__five">
             <!-- Destination card -->
-            <a class="rlr-destination-card" href="./search">
-              <img data-sizes="auto" data-src="./assets/images/dest/05.jpg" data-srcset="./assets/images/dest/05@2x.jpg 2x" class="rlr-destination-card__img lazyload" alt="..." />
-              <span class="rlr-badge rlr-badge--left rlr-badge-- rlr-badge--abs rlr-badge--abs-dest"> 37<br>Tujuan Wisata </span>
+            <a class="rlr-destination-card" href="./search/?desa=5103060006">
+              <img data-sizes="auto" data-src="https://images.unsplash.com/photo-1561969310-fa2e856250ba?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=480&h=670&q=80" data-srcset="https://images.unsplash.com/photo-1561969310-fa2e856250ba?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=480&h=670&q=80" class="rlr-destination-card__img lazyload" alt="..." />
+              <span class="rlr-badge rlr-badge--left rlr-badge-- rlr-badge--abs rlr-badge--abs-dest"> <? $params['desa'] = '5103060006'; ?> <?= count($search->search($params)) ?> Tujuan Wisata </span>
               <div class="rlr-destination-card__info rlr-destination-card__info--left rlr-destination-card__info--bottom">
-                <h2 class="rlr-destination-card__info--main">Jimbaran</h2>
-                <p class="rlr-destination-card__info--sub">780 KM dari Tukad Badung</p>
+                <h2 class="rlr-destination-card__info--main">Petang</h2>
               </div>
             </a>
           </div>
           <div class="rlr-masonary-grid__six">
             <!-- Destination card -->
-            <a class="rlr-destination-card" href="./search">
-              <img data-sizes="auto" data-src="./assets/images/dest/06.jpg" data-srcset="./assets/images/dest/06@2x.jpg 2x" class="rlr-destination-card__img lazyload" alt="..." />
-              <span class="rlr-badge rlr-badge--left rlr-badge-- rlr-badge--abs rlr-badge--abs-dest"> 74 Tujuan Wisata </span>
+            <a class="rlr-destination-card" href="./search/?kabupaten=5102">
+              <img data-sizes="auto" data-src="https://images.unsplash.com/photo-1628307585477-a5acf1ac6630?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=752&h=670&q=80" data-srcset="https://images.unsplash.com/photo-1628307585477-a5acf1ac6630?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=752&h=670&q=80" class="rlr-destination-card__img lazyload" alt="..." />
+              <span class="rlr-badge rlr-badge--left rlr-badge-- rlr-badge--abs rlr-badge--abs-dest"> <? $params['kabupaten'] = '5102'; ?> <?= count($search->search($params)) ?> Tujuan Wisata </span>
               <div class="rlr-destination-card__info rlr-destination-card__info--left rlr-destination-card__info--bottom">
-                <h2 class="rlr-destination-card__info--main">Nusa Lembongan</h2>
-                <p class="rlr-destination-card__info--sub">872 KM dari Tukad Badung</p>
+                <h2 class="rlr-destination-card__info--main">Tabanan</h2>
               </div>
             </a>
           </div>
@@ -1169,7 +564,7 @@ $place = new Place($conn);
         <nav class="rlr-footer__menu__col">
           <div class="navigation-brand-text">
             <div class="rlr-logo rlr-logo__navbar-brand rlr-logo--default mb-3">
-              <a href="./index.html">
+              <a href="#">
                 <img src="./assets/svg/logoipsum-287.svg" alt="#" class="" style="width: 200px;" />
               </a>
             </div>
@@ -1184,20 +579,28 @@ $place = new Place($conn);
             <!-- Footer menu col -->
             <h4>Destinasi</h4>
             <ul>
-              <li><a href="./search/">Ubud</a></li>
-              <li><a href="./search/">Canggu</a></li>
-              <li><a href="./search/">Jimbaran</a></li>
-              <li><a href="./search/">Nusa Penida</a></li>
-              <li><a href="./search/">Cari Destinasi</a></li>
+              <?
+              $count = 0;
+              foreach ($place->getKabupatenByProvinsi('51') as $kabupaten) :
+                $count++ ?>
+                <li><a href="./search/?kabupaten=<?= $kabupaten['id_kabupaten'] ?>"><?= $kabupaten['nama'] ?></a></li>
+              <?
+                if ($count == 4) break;
+              endforeach; ?>
+
+              <? if (count($place->getKabupatenByProvinsi('51')) > 4) : ?>
+                <li><a href="./search/?provinsi=51">Jelajahi <?= $place->getProvinsiNameById('51') ?></a></li>
+              <? endif; ?>
+
             </ul>
           </nav>
           <nav class="rlr-footer__menu__col">
             <!-- Footer menu col -->
             <h4>Kategori</h4>
             <ul>
-              <li><a href="./search">Akomodasi</a></li>
-              <li><a href="./search/">Makanan & Minuman</a></li>
-              <li><a href="./search/">Objek Wisata</a></li>
+              <li><a href="./search/?kategori=1">Akomodasi</a></li>
+              <li><a href="./search/?kategori=2">Makanan & Minuman</a></li>
+              <li><a href="../search/?kategori=3">Objek Wisata</a></li>
             </ul>
           </nav>
           <nav class="rlr-footer__menu__col">
@@ -1205,8 +608,13 @@ $place = new Place($conn);
             <h4>Lainnya</h4>
             <ul>
               <li><a href="./blog/">Blog</a></li>
-              <li><a href="./new-listing/">Daftarkan bisnis</a></li>
-              <li><a href="./contact/">Hubungi kami</a></li>
+              <? if (isset($user['level']) && $user['level'] === 'admin') : ?>
+                <li><a href="./dashboard/admin/">Dashboard Admin</a></li>
+              <? elseif (isset($user['level']) && $user['level'] === 'bisnis') : ?>
+                <li><a href="./dashboard/business/">Dashboard Bisnis</a></li>
+              <? else : ?>
+                <li><a href="./manage-listing/">Daftarkan bisnis</a></li>
+              <? endif; ?>
             </ul>
           </nav>
         </div>
@@ -1236,6 +644,56 @@ $place = new Place($conn);
   <script src="./vendors/navx/js/navigation.min.js" defer></script>
   <script src="./js/old/main.js" defer></script>
   <script src="./js/landing.js" defer></script>
+
+  <script>
+    <? if (isset($user['id_pengguna'])) : ?>
+      $(document).on('click', '.rlr-js-action-wishlist', function() {
+        var id = $(this).attr('id');
+        var $this = $(this);
+
+        $.ajax({
+          url: 'wishlist/toggle_wishlist.php',
+          type: 'POST',
+          data: {
+            id_bisnis: id,
+            id_pengguna: <?= $user['id_pengguna'] ?>
+          },
+          error: function(response) {
+            console.log(response);
+          }
+        });
+      });
+    <? endif; ?>
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        var pos = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        };
+
+        getAddress(pos.lat, pos.lng);
+
+        async function getAddress(lat, lng) {
+          let address = await reverseGeocoding(lat, lng);
+          console.log(address);
+        }
+
+      }, function() {});
+    }
+
+    async function reverseGeocoding(lat, lng) {
+      const response = await fetch(
+        "https://nominatim.openstreetmap.org/search.php?q=" +
+        lat +
+        "," +
+        lng +
+        "&polygon_geojson=1&format=json"
+      );
+      const data = await response.json();
+      return data[0].display_name;
+    }
+  </script>
 </body>
 
 </html>

@@ -24,15 +24,15 @@ class Review
 
         $stmt = $this->conn->prepare($query);
 
-        $review->id_bisnis = htmlspecialchars(strip_tags($review->idBisnis));
-        $review->id_pengguna = htmlspecialchars(strip_tags($review->idPengguna));
+        $review->idBisnis = htmlspecialchars(strip_tags($review->idBisnis));
+        $review->idPengguna = htmlspecialchars(strip_tags($review->idPengguna));
         $review->rating = htmlspecialchars(strip_tags($review->rating));
         $review->judul = htmlspecialchars(strip_tags($review->judul));
         $review->komentar = htmlspecialchars(strip_tags($review->komentar));
         $review->status = htmlspecialchars(strip_tags($review->status));
 
-        $stmt->bindParam(':id_bisnis', $review->id_bisnis);
-        $stmt->bindParam(':id_pengguna', $review->id_pengguna);
+        $stmt->bindParam(':id_bisnis', $review->idBisnis);
+        $stmt->bindParam(':id_pengguna', $review->idPengguna);
         $stmt->bindParam(':rating', $review->rating);
         $stmt->bindParam(':judul', $review->judul);
         $stmt->bindParam(':komentar', $review->komentar);
@@ -49,17 +49,14 @@ class Review
     {
         $query = "SELECT * FROM $this->tableName WHERE id_bisnis = :id_bisnis AND status = 'publik'";
 
-        // If the stars parameter is not empty, add a WHERE clause to the query to filter by rating
         if (isset($stars)) {
             $query .= " AND rating IN (" . $stars . ")";
         }
 
-        // If the keyword parameter is not empty, add a WHERE clause to the query to search for the keyword in the judul and komentar fields
         if (isset($keyword)) {
             $query .= " AND (judul LIKE '%" . $keyword . "%' OR komentar LIKE '%" . $keyword . "%')";
         }
 
-        // Add an ORDER BY clause to the query based on the sort parameter
         if (isset($sort)) {
             if ($sort == 'Ulasan terbaru') {
                 $query .= " ORDER BY waktu DESC";
@@ -72,8 +69,7 @@ class Review
             }
         }
 
-        // Add a LIMIT clause to the query to specify the offset and limit
-        if (!is_null($offset) && !is_null($offset) ) {
+        if (!is_null($offset) && !is_null($offset)) {
             $query .= " LIMIT " . intval($offset) . ", " . intval($limit);
         }
 
@@ -84,7 +80,16 @@ class Review
         $stmt->execute();
 
         return $stmt->fetchAll();
+    } 
+    
+    public function getReviewById($idUlasan)
+    {
+        $query = "SELECT * FROM ulasan WHERE id_ulasan = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$idUlasan]);
+        return $stmt->fetchAll();
     }
+
 
     public function update(Review $review)
     {
@@ -130,6 +135,25 @@ class Review
         return $result['TotalReviews'];
     }
 
+    public function getTotalReviewsPerMonth($idBisnis)
+    {
+        $query = "SELECT
+        MONTH(waktu) AS Month,
+        YEAR(waktu) AS Year,
+        COUNT(id_ulasan) AS TotalReviews
+      FROM $this->tableName
+      WHERE id_bisnis = :id_bisnis AND status = 'publik' AND waktu >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+      GROUP BY Month
+      ORDER BY Month(waktu) DESC
+      ";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id_bisnis', $idBisnis);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function getAverageRatingById($idBisnis)
     {
         $query = "SELECT AVG(rating) as average_rating FROM $this->tableName WHERE id_bisnis = ?";
@@ -137,5 +161,29 @@ class Review
         $stmt->execute([$idBisnis]);
         $row = $stmt->fetch();
         return $row['average_rating'];
+    }
+
+    public function createBusinessReply($idUlasan, $judul, $komentar)
+    {
+        $query = "INSERT INTO balasan_ulasan SET id_ulasan = ?, judul = ?, komentar = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$idUlasan, $judul, $komentar]);
+        return $stmt->rowCount() > 0;
+    }
+
+    public function readBusinessReply($idUlasan)
+    {
+        $query = "SELECT * FROM balasan_ulasan WHERE id_ulasan = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$idUlasan]);
+        return $stmt->fetch();
+    }
+
+    public function deleteBusinessReply($idUlasan)
+    {
+        $query = "DELETE FROM balasan_ulasan WHERE id_ulasan = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$idUlasan]);
+        return $stmt->rowCount() > 0;
     }
 }

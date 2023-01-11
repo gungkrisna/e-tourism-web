@@ -1,5 +1,196 @@
-#blogTitle[placeholder]:empty:before, #blogSubtitle[placeholder]:empty:before {
+#blogTitle[placeholder]:empty:before,
+#blogSubtitle[placeholder]:empty:before {
     content: attr(placeholder);
-    color: rgb(162, 162, 162); 
-};
+    color: rgb(162, 162, 162);
+}
+
+;
+
+/*
+
+CKEditor CSS 
+*/
+
+.cke_chrome{
+    border-radius: var(--spacing-8);
+}
+
+/*
+
+Image Upload CSS
+
+*/
+
+.upload-card {
+    width: 100%;
+    height: auto;
+    text-align: center;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
+    border-radius: var(--spacing-8);
+    overflow: hidden;
+    background: #121212;
+    margin: var(--spacing-10) 0;
+}
+
+.upload-card p {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #878a9a;
+}
+
+.upload-card .drag-area {
+    width: 100%;
+    height: 480px;
+    border-radius: var(--spacing-8);
+    color: #aac6c8;
+    font-size: 0.9rem;
+    font-weight: 500;
+    position: relative;
+    background: #121212;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.visible {
+    height: 100%;
+    width: 100%;
+    border-radius: inherit;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    box-shadow: inset 0 0 0 2000px rgba(0, 0, 0, 0.3);
+    opacity: 0.4;
+}
+
+.upload-card .select-file {
+    color: #10a5b2;
+    margin-left: 5px;
+    cursor: pointer;
+    transition: 0.4s;
+}
+
+.upload-card .select-file:hover {
+    opacity: 0.6;
+}
+
+.upload-card .upload-container {
+    width: 100%;
+    height: auto;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 10px;
+}
+
+.upload-card .upload-container .image {
+    width: calc(33.33% - 10px);
+    /* adjust width to 33.33% and reduce margin */
+    margin-right: 10px;
+    height: 150px;
+    position: relative;
+    margin-bottom: 8px;
+}
+
+.upload-card .upload-container .image img {
+    width: 100%;
+    height: 100%;
+    border-radius: 5px;
+    object-fit: cover;
+}
+
+.upload-card .upload-container .image span {
+    position: absolute;
+    top: -2px;
+    right: 9px;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+/* dragover class will used in drag and drop system */
+.upload-card .drag-area.dragover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.upload-card .drag-area.dragover .on-drop {
+    display: inline;
+    font-size: 28px;
+}
+
+.upload-card input,
+.upload-card .drag-area .on-drop,
+.upload-card .drag-area.dragover .visible {
+    display: none;
+}
+
+.rlr-banner-splide__image-wrapper::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0));
+    border-radius: inherit;
+  }
+
+.rlr-avatar__media--rounded {
+    object-fit: cover;
+    height: 56px;
+    width: 56px;
+}
+
+.description-url:hover {
+    cursor: pointer;
+    text-decoration: underline;
+    transition: text-decoration 0.2s ease-in-out;
+  }
+  
+  /* Rating Star Widgets Style */
+  .rating-stars ul {
+    list-style-type:none;
+    padding:0;
+
+    -moz-user-select:none;
+    -webkit-user-select:none;
+  }
+  .rating-stars ul > li.star {
+    display:inline-block;
+    
+  }
+  
+  /* Idle State of the stars */
+  .rating-stars ul > li.star > i.rlr-icon-font {
+    font-size:2.5em; /* Change the size of the stars */
+    color:#ccc; /* Color on idle state */
+  }
+  
+  /* Hover state of the stars */
+  .rating-stars ul > li.star.hover > i.rlr-icon-font {
+    color:#FFCC36;
+  }
+  
+  /* Selected state of the stars */
+  .rating-stars ul > li.star.selected > i.rlr-icon-font {
+    color:#FF912C;
+  }
+  
+    /* Small devices */
+  @media (min-width: 576px), (max-width: 576px) {
+    .review-list-stars {
+        display: none;
+    }
+    .rlr-error {
+        background-image: none;
+    }
+  }
+  
+
   
