@@ -25,21 +25,21 @@ if (isset($_GET['id'])) {
 }
 
 if (!isset($_GET['id']) || empty($business)) {
-  header('HTTP/1.1 404 Not Found');
-  include '../404.html'; //need to fix
-  exit();
+  header("Location: ../404.html");
 }
 
 $business = $business_service->getBusinessById($_GET['id']);
 
+if (is_null($business)) {
+  header("Location: ../404.html");
+}
+
 if (!isset($user['level']) && $business->status !== 'disetujui') {
-  header('HTTP/1.1 404 Not Found');
-  include '../404.html'; //need to fix
-  exit();
-} else if ($business->status !== 'disetujui' && $user['level'] == 'pengguna') {
-  header('HTTP/1.1 404 Not Found');
-  include '../404.html'; //need to fix
-  exit();
+
+  header("Location: ../404.html");
+} else if ($business && $business->status !== 'disetujui' && $user['level'] == 'pengguna') {
+
+  header("Location: ../404.html");
 } else {
   if (isset($user['level']) && $business->status !== 'disetujui' && $business_service->getBusinessByUserId($user['id_pengguna'])->idBisnis === $business->idBisnis) {
     $isNotActive = 'true';
@@ -514,14 +514,14 @@ $neighbours = $place->getNearestBusinessesByLocation($place->getPlaceById($busin
                     <div class="rlr-review-card__title gap-4">
                       <h3 class="rlr-review-card__title-review"><?= $review['judul'] ?></h3>
                       <? if (isset($user['level'])) : ?>
-                      <span class="rlr-svg-icon button-report-review" data-id-ulasan="<?= $review['id_ulasan'] ?>">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#000000">
-                          <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                          <g id="SVGRepo_iconCarrier">
-                            <path d="M6 14.4623H16.1909C17.6066 14.4623 18.472 12.7739 17.7261 11.4671L17.2365 10.6092C16.7547 9.76504 16.7547 8.69728 17.2365 7.85309L17.7261 6.99524C18.472 5.68842 17.6066 4 16.1909 4L6 4L6 14.4623ZM6 14.4623L6 20" stroke="#363853" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                          </g>
-                        </svg>
-                      </span>
+                        <span class="rlr-svg-icon button-report-review" data-id-ulasan="<?= $review['id_ulasan'] ?>">
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#000000">
+                            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                            <g id="SVGRepo_iconCarrier">
+                              <path d="M6 14.4623H16.1909C17.6066 14.4623 18.472 12.7739 17.7261 11.4671L17.2365 10.6092C16.7547 9.76504 16.7547 8.69728 17.2365 7.85309L17.7261 6.99524C18.472 5.68842 17.6066 4 16.1909 4L6 4L6 14.4623ZM6 14.4623L6 20" stroke="#363853" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </g>
+                          </svg>
+                        </span>
                       <? endif; ?>
                     </div>
                     <div class="rlr-review-card__comments mb-4" itemprop="review description">
@@ -899,91 +899,91 @@ $neighbours = $place->getNearestBusinessesByLocation($place->getPlaceById($busin
   <? endif ?>
 
   <? if (isset($user['level']) && $user['level'] === 'pengguna') : ?>
-  <!-- Add Review Modal -->
-  <div id="addReviewModal" class="modal">
-    <!-- Modal content -->
-    <div class="modal-content">
-      <div id="rlr-review-from" class="container-xxxl">
-        <form action="addReview/" method="POST" enctype="multipart/form-data">
-          <section class="rlr-section rlr-section__content--md-top row justify-content-center my-0">
-            <div class="modal-header">
-              <div class="rlr-section__heading py-4 px-3">
-                <label class="rlr-form-label rlr-form-label--dark m-0" for="rlr_review_form_title"> Tulis Ulasan
-                </label>
-              </div>
-            </div>
-            <div class="col-xl-12">
-              <fieldset class="rlr-product-form--show px-3">
-                <legend class="rlr-review-form__hidden-legend">Tulis ulasan</legend>
-                <!-- Section heading -->
-                <div class="rlr-fieldrow">
-                  <div class="rlr-fieldrow_item my-2">
-                    <div class='rating-stars text-center row'>
-                      <ul id='stars'>
-                        <li class='star' title='Poor' data-value='1'>
-                          <i class='rlr-icon-font flaticon-star-1'></i>
-                        </li>
-                        <li class='star' title='Fair' data-value='2'>
-                          <i class='rlr-icon-font flaticon-star-1'></i>
-                        </li>
-                        <li class='star' title='Good' data-value='3'>
-                          <i class='rlr-icon-font flaticon-star-1'></i>
-                        </li>
-                        <li class='star' title='Excellent' data-value='4'>
-                          <i class='rlr-icon-font flaticon-star-1'></i>
-                        </li>
-                        <li class='star' title='Perfect' data-value='5'>
-                          <i class='rlr-icon-font flaticon-star-1'></i>
-                        </li>
-                      </ul>
-                    </div>
-                    <input type="hidden" name="rating" id="rating" value="1">
-                    <input type="hidden" name="id_bisnis" value="<?= $business->idBisnis ?>">
-                  </div>
-                  <div class="rlr-fieldrow__form-element">
-                    <div class="rlr-fieldrow__item mt-2 mb-4">
-                      <label class="rlr-form-label rlr-form-label--dark mb-3" for="rlr_review_form_title"> Judul
-                      </label> <input type="text" name="judul" autocomplete="off" maxlength="70" id="rlr_review_form_title" class="form-control" placeholder="Berikan judul menarik">
-                    </div>
-                    <div class="rlr-fieldrow__item mt-2 mb-4">
-                      <label class="rlr-form-label rlr-form-label--dark mb-3" for="rlr_review_form_desc"> Ceritakan
-                        pengalaman Anda </label>
-                      <textarea id="rlr_review_form_desc" name="komentar" class="form-control form-control--text-area" placeholder="Jelaskan hal menarik dari kunjungan Anda" rows="12"></textarea>
-                    </div>
-                  </div>
-                  <div class="rlr-fieldrow__item mt-2 mb-4" style="z-index: 200">
-                    <label class="rlr-form-label rlr-form-label--dark mb-4" for="rlr_review_form_title"> Tambahkan
-                      foto dari pengalaman Anda. </label>
-                    <div class="upload-card">
-                      <div class="drag-area">
-                        <span class="visible">
-                          Drag & drop gambar disini atau
-                          <span class="select-file" role="button">Pilih File</span>
-                        </span>
-                        <span class="on-drop">Jatuhkan gambar disini</span>
-                        <input name="file[]" type="file" class="file" multiple />
-                      </div>
-
-                      <!-- IMAGE PREVIEW CONTAINER -->
-                      <div class="upload-container">
-
-                      </div>
-                    </div>
-                  </div>
+    <!-- Add Review Modal -->
+    <div id="addReviewModal" class="modal">
+      <!-- Modal content -->
+      <div class="modal-content">
+        <div id="rlr-review-from" class="container-xxxl">
+          <form action="addReview/" method="POST" enctype="multipart/form-data">
+            <section class="rlr-section rlr-section__content--md-top row justify-content-center my-0">
+              <div class="modal-header">
+                <div class="rlr-section__heading py-4 px-3">
+                  <label class="rlr-form-label rlr-form-label--dark m-0" for="rlr_review_form_title"> Tulis Ulasan
+                  </label>
                 </div>
-              </fieldset>
-            </div>
-            <div class="modal-footer d-flex justify-content-between">
-              <div class="rlr-review-form__buttons mt-0 py-2 px-3" style="width: 100%">
-                <button type="button" class="btn rlr-button rlr-review-form__cancel rlr-button--small rlr-button--rounded rlr-button--white mt-0" id="closeAddReviewModalBtn">Batal</button>
-                <button type="submit" class="btn rlr-button rlr-review-form__submit rlr-button--small rlr-button--rounded rlr-button--brand mt-0">Kirim</button>
               </div>
-            </div>
-          </section>
-        </form>
+              <div class="col-xl-12">
+                <fieldset class="rlr-product-form--show px-3">
+                  <legend class="rlr-review-form__hidden-legend">Tulis ulasan</legend>
+                  <!-- Section heading -->
+                  <div class="rlr-fieldrow">
+                    <div class="rlr-fieldrow_item my-2">
+                      <div class='rating-stars text-center row'>
+                        <ul id='stars'>
+                          <li class='star' title='Poor' data-value='1'>
+                            <i class='rlr-icon-font flaticon-star-1'></i>
+                          </li>
+                          <li class='star' title='Fair' data-value='2'>
+                            <i class='rlr-icon-font flaticon-star-1'></i>
+                          </li>
+                          <li class='star' title='Good' data-value='3'>
+                            <i class='rlr-icon-font flaticon-star-1'></i>
+                          </li>
+                          <li class='star' title='Excellent' data-value='4'>
+                            <i class='rlr-icon-font flaticon-star-1'></i>
+                          </li>
+                          <li class='star' title='Perfect' data-value='5'>
+                            <i class='rlr-icon-font flaticon-star-1'></i>
+                          </li>
+                        </ul>
+                      </div>
+                      <input type="hidden" name="rating" id="rating" value="1">
+                      <input type="hidden" name="id_bisnis" value="<?= $business->idBisnis ?>">
+                    </div>
+                    <div class="rlr-fieldrow__form-element">
+                      <div class="rlr-fieldrow__item mt-2 mb-4">
+                        <label class="rlr-form-label rlr-form-label--dark mb-3" for="rlr_review_form_title"> Judul
+                        </label> <input type="text" name="judul" autocomplete="off" maxlength="70" id="rlr_review_form_title" class="form-control" placeholder="Berikan judul menarik">
+                      </div>
+                      <div class="rlr-fieldrow__item mt-2 mb-4">
+                        <label class="rlr-form-label rlr-form-label--dark mb-3" for="rlr_review_form_desc"> Ceritakan
+                          pengalaman Anda </label>
+                        <textarea id="rlr_review_form_desc" name="komentar" class="form-control form-control--text-area" placeholder="Jelaskan hal menarik dari kunjungan Anda" rows="12"></textarea>
+                      </div>
+                    </div>
+                    <div class="rlr-fieldrow__item mt-2 mb-4" style="z-index: 200">
+                      <label class="rlr-form-label rlr-form-label--dark mb-4" for="rlr_review_form_title"> Tambahkan
+                        foto dari pengalaman Anda. </label>
+                      <div class="upload-card">
+                        <div class="drag-area">
+                          <span class="visible">
+                            Drag & drop gambar disini atau
+                            <span class="select-file" role="button">Pilih File</span>
+                          </span>
+                          <span class="on-drop">Jatuhkan gambar disini</span>
+                          <input name="file[]" type="file" class="file" multiple />
+                        </div>
+
+                        <!-- IMAGE PREVIEW CONTAINER -->
+                        <div class="upload-container">
+
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </fieldset>
+              </div>
+              <div class="modal-footer d-flex justify-content-between">
+                <div class="rlr-review-form__buttons mt-0 py-2 px-3" style="width: 100%">
+                  <button type="button" class="btn rlr-button rlr-review-form__cancel rlr-button--small rlr-button--rounded rlr-button--white mt-0" id="closeAddReviewModalBtn">Batal</button>
+                  <button type="submit" class="btn rlr-button rlr-review-form__submit rlr-button--small rlr-button--rounded rlr-button--brand mt-0">Kirim</button>
+                </div>
+              </div>
+            </section>
+          </form>
+        </div>
       </div>
     </div>
-  </div>
   <? endif; ?>
 
   <!-- Review Modal -->

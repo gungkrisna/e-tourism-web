@@ -2,6 +2,7 @@
 include '../../../src/conn.php';
 include '../../../src/Pengguna.php';
 include '../../../src/BusinessService.php';
+include '../../../src/Business.php';
 include '../../../src/BusinessPhoto.php';
 include '../../../src/Review.php';
 include '../../../src/ReviewPhoto.php';
@@ -51,6 +52,11 @@ $services->deleteServicesByBusinessId($id_bisnis);
 
 $business_service->removeRejectedBusinessListing($id_bisnis);
 $business_service->deleteBusinessFromCategoryId($id_bisnis);
+
+$id_pemilik = $business_service->getBusinessById($id_bisnis)->idPengguna;
+if($pengguna->read($id_pemilik)['level'] == 'bisnis') {
+    $pengguna->update($id_pemilik, null, null, null, null, null, null, null, null, 'pengguna');
+}
 
 if($business_service->deleteBusiness($id_bisnis)){
     echo "Bisnis berhasil dihapus";

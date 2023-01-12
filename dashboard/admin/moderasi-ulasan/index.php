@@ -73,9 +73,10 @@ $reviewphotos = new ReviewPhoto($conn);
                 <a href="index.html" class="logo-icon"><span class="logo-text hidden-on-mobile">Logo</span></a>
                 <div class="sidebar-user-switcher user-activity-online">
                     <a href="#">
-                        <img src="../../assets/images/avatars/avatar.png">
-                        <span class="activity-indicator"></span>
-                        <span class="user-info-text">gk<br><span class="user-state-info">Administrator</span></span>
+                        <? if ($user && !is_null($user['avatar'])) : ?>
+                            <img src="../../../assets/images/avatar/<?= $user['avatar'] ?>" style="height: 36px; width: 36px;" alt="account avatar" />
+                        <? endif; ?>
+                        <span class="user-info-text"><?= $user['nama'] ?><br><span class="user-state-info">Administrator</span></span>
                     </a>
                 </div>
             </div>
@@ -216,7 +217,6 @@ $reviewphotos = new ReviewPhoto($conn);
         <script src="../../assets/js/main.min.js"></script>
         <script src="../../../js/listing.js"></script>
         <script>
-
             function loadData() {
                 $.ajax({
                     url: "load_report.php",
