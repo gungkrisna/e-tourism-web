@@ -299,14 +299,12 @@ if (isset($_GET['id'])) {
             <h4>Lainnya</h4>
             <ul>
               <li><a href="../blog/">Blog</a></li>
-              <? if (isset($user)) : ?>
-                <? if ($user['level'] === 'admin') : ?>
-                  <li><a href="./dashboard/admin/">Dashboard Admin</a></li>
-                <? elseif ($user['level'] === 'bisnis') : ?>
-                  <li><a href="./dashboard/business">Dashboard Bisnis</a></li>
-                  <? endif; ?>
+              <? if (isset($user['level']) && $user['level'] === 'admin') : ?>
+                  <li><a href="../dashboard/admin/">Dashboard Admin</a></li>
+                  <? elseif (isset($user['level']) && $user['level'] === 'bisnis') : ?>
+                  <li><a href="../dashboard/business">Dashboard Bisnis</a></li>
                   <? else : ?>
-                  <li><a href="./manage-listing/">Daftarkan bisnis</a></li>
+                  <li><a href="../manage-listing/">Daftarkan bisnis</a></li>
                 <? endif; ?>
             </ul>
           </nav>
